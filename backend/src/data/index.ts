@@ -1,4 +1,5 @@
 import db from "./db";
+import chatgpt from "./chatgpt";
 import {
   openApiRegistryV1,
   openApiRegistryV1Internal,
@@ -8,6 +9,7 @@ import {
 
 export {
   db,
+  chatgpt,
   openApiRegistryV1,
   openApiRegistryV1Internal,
   registerSchemaOpenAPIv1,

@@ -18,8 +18,15 @@ export type User = z.infer<typeof zUser>;
 // chats
 export const zChat = z.object({
   createdAt: z.date(),
+  updatedAt: z.date(),
   userId: z.string(),
-  messages: z.object({}).array(),
+  messages: z
+    .object({
+      role: z.enum(["user", "assistant", "system", "function"]),
+      content: z.string(),
+      result: z.any().optional(),
+    })
+    .array(),
 });
 export type Chat = z.infer<typeof zChat>;
 

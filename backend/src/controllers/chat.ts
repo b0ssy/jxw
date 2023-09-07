@@ -1,28 +1,152 @@
 import { ObjectId } from "mongodb";
 
-import { db } from "../data";
+import db, { Chat } from "../data/db";
+import chatgpt from "../data/chatgpt";
 import { Controller } from "../data/api";
+import { BadRequestError, InternalServerError } from "../errors";
 
 export class ChatController extends Controller {
-  async create() {
-    const createdAt = new Date();
+  // Create a new chats
+  async create(message: string) {
+    // Ensure valid message
+    if (!message.trim()) {
+      throw new BadRequestError(
+        "Please provide a valid message",
+        "invalid_message"
+      );
+    }
+
+    // Ensure valid user
     const userId = this.session.getUserIdOrThrow();
+
+    // Call chat completion
+    //
+    // For first message, we will interject a system message to request
+    // ChatGPT to reply NO if message is not related to marketing
+    const messages: Chat["messages"] = [
+      {
+        role: "user",
+        content: message,
+      },
+      {
+        role: "system",
+        content: "Reply NO if not marketing related",
+      },
+    ];
+    const result = await chatgpt.chatComplete(messages);
+    messages.push({
+      role: result.choices.length
+        ? result.choices[0].message.role
+        : "assistant",
+      content: result.choices.length
+        ? result.choices[0].message.content || ""
+        : "",
+      result,
+    });
+
+    // Insert doc
+    const now = new Date();
     const { insertedId } = await db.chats.insertOne({
-      createdAt,
+      createdAt: now,
+      updatedAt: now,
       userId,
-      messages: [],
+      messages,
     });
     return { _id: insertedId };
   }
 
-  // TODO
-  async update(chatId: string, message: string) {}
-
-  async delete(chatId: string) {
+  // List all chats
+  async list() {
+    // Ensure valid user
     const userId = this.session.getUserIdOrThrow();
-    await db.chats.deleteOne({
+
+    // Get all chats
+    const chats = await db.chats.find({ userId }).toArray();
+
+    // Filter away system messages
+    chats.forEach((chat) => {
+      chat.messages = chat.messages.filter(
+        (message) => message.role !== "system"
+      );
+    });
+
+    return {
+      data: chats,
+      count: chats.length,
+    };
+  }
+
+  // Update chat with new message
+  async update(chatId: string, message: string) {
+    // Ensure valid message
+    if (!message.trim()) {
+      throw new BadRequestError(
+        "Please provide a valid message",
+        "invalid_message"
+      );
+    }
+
+    // Ensure valid user
+    const userId = this.session.getUserIdOrThrow();
+
+    // Ensure valid chat id
+    const chat = await db.chats.findOne({
       _id: new ObjectId(chatId),
       userId,
     });
+    if (!chat) {
+      throw new BadRequestError(
+        "Please provide a valid chat id",
+        "invalid_chat_id"
+      );
+    }
+
+    // Call chat completion
+    const result = await chatgpt.chatComplete(chat.messages);
+    const newMessage: Chat["messages"][0] = {
+      role: result.choices.length
+        ? result.choices[0].message.role
+        : "assistant",
+      content: result.choices.length
+        ? result.choices[0].message.content || ""
+        : "",
+      result,
+    };
+
+    // Update doc
+    const now = new Date();
+    const updateResult = await db.chats.updateOne(
+      {
+        _id: chat._id,
+        userId,
+      },
+      {
+        updatedAt: now,
+        $push: {
+          messages: newMessage,
+        },
+      }
+    );
+    if (updateResult.modifiedCount !== 1) {
+      throw new InternalServerError();
+    }
+  }
+
+  // Delete chat
+  async delete(chatId: string) {
+    // Ensure valid user
+    const userId = this.session.getUserIdOrThrow();
+
+    // Delete doc
+    const deleteResult = await db.chats.deleteOne({
+      _id: new ObjectId(chatId),
+      userId,
+    });
+    if (deleteResult.deletedCount !== 1) {
+      throw new BadRequestError(
+        "Please provide a valid chat id",
+        "invalid_chat_id"
+      );
+    }
   }
 }
