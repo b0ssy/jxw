@@ -8,20 +8,16 @@ const routes = new Routes({
 })
   .post("/v1/chats", "Create chat", {
     tags: ["Chat"],
-    req: z.object({
-      body: z.object({
-        message: z.string(),
-      }),
-    }),
+    req: z.object({}),
     resSuccessBody: z.object({
-      chatId: z.string(),
+      id: z.string(),
     }),
     handler: async ({ ctl, body }) => {
-      const { chatId } = await ctl.create(body.message);
-      return { chatId };
+      const { _id } = await ctl.create();
+      return { id: _id.toHexString() };
     },
   })
-  .post("/v1/chats/{id}/message", "Add chat message", {
+  .post("/v1/chats/{id}/message", "Create chat message", {
     tags: ["Chat"],
     req: z.object({
       body: z.object({
@@ -31,9 +27,7 @@ const routes = new Routes({
         id: z.string(),
       }),
     }),
-    resSuccessBody: z.object({
-      chatId: z.string(),
-    }),
+    resSuccessBody: z.object({}),
     handler: async ({ ctl, body, params }) => {
       await ctl.update(params.id, body.message);
     },
