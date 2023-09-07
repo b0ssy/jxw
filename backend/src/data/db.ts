@@ -1,3 +1,4 @@
+import { MongoClient, ServerApiVersion } from "mongodb";
 import { z } from "zod";
 
 import { ENV } from "../config";
@@ -23,8 +24,25 @@ export type Chat = z.infer<typeof zChat>;
 
 // Manage MongoDB
 export class Database {
-  // TODO
-  shutdown() {}
+  client: MongoClient;
+
+  constructor() {
+    this.client = new MongoClient(ENV.MONGODB_URI, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+      },
+    });
+  }
+
+  async connect() {
+    await this.client.connect();
+  }
+
+  async close() {
+    await this.client.close();
+  }
 }
 
 export default new Database();

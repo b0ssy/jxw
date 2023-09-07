@@ -23,6 +23,9 @@ export const execute = async () => {
   // Create log directory
   await fs.mkdir(ENV.LOG_DIRECTORY, { recursive: true });
 
+  // Connect to database
+  await db.connect();
+
   // Create server
   const app = express();
 
@@ -63,7 +66,7 @@ export const execute = async () => {
 // Shutdown server and database connections
 // Please note that after this command, you will not be able to run server again
 export const shutdown = () => {
-  db.shutdown();
+  db.close();
   server?.close();
   server = null;
 };
