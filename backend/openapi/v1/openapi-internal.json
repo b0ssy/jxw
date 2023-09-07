@@ -77,12 +77,52 @@
           "data": {
             "type": "object",
             "properties": {
-              "id": {
+              "createdAt": {
+                "type": "string"
+              },
+              "updatedAt": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "assistant",
+                        "system",
+                        "function"
+                      ]
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "result": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "content"
+                  ]
+                }
+              },
+              "_id": {
                 "type": "string"
               }
             },
             "required": [
-              "id"
+              "createdAt",
+              "updatedAt",
+              "userId",
+              "messages",
+              "_id"
             ]
           }
         },
@@ -115,7 +155,54 @@
           },
           "data": {
             "type": "object",
-            "properties": {}
+            "properties": {
+              "createdAt": {
+                "type": "string"
+              },
+              "updatedAt": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "assistant",
+                        "system",
+                        "function"
+                      ]
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "result": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "content"
+                  ]
+                }
+              },
+              "_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "createdAt",
+              "updatedAt",
+              "userId",
+              "messages",
+              "_id"
+            ]
           }
         },
         "required": [
@@ -177,13 +264,17 @@
                           "content"
                         ]
                       }
+                    },
+                    "_id": {
+                      "type": "string"
                     }
                   },
                   "required": [
                     "createdAt",
                     "updatedAt",
                     "userId",
-                    "messages"
+                    "messages",
+                    "_id"
                   ]
                 }
               },

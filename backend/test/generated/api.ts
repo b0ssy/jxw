@@ -56,10 +56,10 @@ export interface V1ChatsGet200Response {
 export interface V1ChatsGet200ResponseData {
     /**
      * 
-     * @type {Array<V1ChatsGet200ResponseDataDataInner>}
+     * @type {Array<V1ChatsPost200ResponseData>}
      * @memberof V1ChatsGet200ResponseData
      */
-    'data': Array<V1ChatsGet200ResponseDataDataInner>;
+    'data': Array<V1ChatsPost200ResponseData>;
     /**
      * 
      * @type {number}
@@ -67,72 +67,6 @@ export interface V1ChatsGet200ResponseData {
      */
     'count': number;
 }
-/**
- * 
- * @export
- * @interface V1ChatsGet200ResponseDataDataInner
- */
-export interface V1ChatsGet200ResponseDataDataInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof V1ChatsGet200ResponseDataDataInner
-     */
-    'createdAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof V1ChatsGet200ResponseDataDataInner
-     */
-    'updatedAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof V1ChatsGet200ResponseDataDataInner
-     */
-    'userId': string;
-    /**
-     * 
-     * @type {Array<V1ChatsGet200ResponseDataDataInnerMessagesInner>}
-     * @memberof V1ChatsGet200ResponseDataDataInner
-     */
-    'messages': Array<V1ChatsGet200ResponseDataDataInnerMessagesInner>;
-}
-/**
- * 
- * @export
- * @interface V1ChatsGet200ResponseDataDataInnerMessagesInner
- */
-export interface V1ChatsGet200ResponseDataDataInnerMessagesInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof V1ChatsGet200ResponseDataDataInnerMessagesInner
-     */
-    'role': V1ChatsGet200ResponseDataDataInnerMessagesInnerRoleEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof V1ChatsGet200ResponseDataDataInnerMessagesInner
-     */
-    'content': string;
-    /**
-     * 
-     * @type {any}
-     * @memberof V1ChatsGet200ResponseDataDataInnerMessagesInner
-     */
-    'result'?: any | null;
-}
-
-export const V1ChatsGet200ResponseDataDataInnerMessagesInnerRoleEnum = {
-    User: 'user',
-    Assistant: 'assistant',
-    System: 'system',
-    Function: 'function'
-} as const;
-
-export type V1ChatsGet200ResponseDataDataInnerMessagesInnerRoleEnum = typeof V1ChatsGet200ResponseDataDataInnerMessagesInnerRoleEnum[keyof typeof V1ChatsGet200ResponseDataDataInnerMessagesInnerRoleEnum];
-
 /**
  * 
  * @export
@@ -178,10 +112,10 @@ export interface V1ChatsIdMessagePost200Response {
     'message': string | null;
     /**
      * 
-     * @type {object}
+     * @type {V1ChatsPost200ResponseData}
      * @memberof V1ChatsIdMessagePost200Response
      */
-    'data': object;
+    'data': V1ChatsPost200ResponseData;
 }
 /**
  * 
@@ -232,8 +166,67 @@ export interface V1ChatsPost200ResponseData {
      * @type {string}
      * @memberof V1ChatsPost200ResponseData
      */
-    'id': string;
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsPost200ResponseData
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsPost200ResponseData
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {Array<V1ChatsPost200ResponseDataMessagesInner>}
+     * @memberof V1ChatsPost200ResponseData
+     */
+    'messages': Array<V1ChatsPost200ResponseDataMessagesInner>;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsPost200ResponseData
+     */
+    '_id': string;
 }
+/**
+ * 
+ * @export
+ * @interface V1ChatsPost200ResponseDataMessagesInner
+ */
+export interface V1ChatsPost200ResponseDataMessagesInner {
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsPost200ResponseDataMessagesInner
+     */
+    'role': V1ChatsPost200ResponseDataMessagesInnerRoleEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsPost200ResponseDataMessagesInner
+     */
+    'content': string;
+    /**
+     * 
+     * @type {any}
+     * @memberof V1ChatsPost200ResponseDataMessagesInner
+     */
+    'result'?: any | null;
+}
+
+export const V1ChatsPost200ResponseDataMessagesInnerRoleEnum = {
+    User: 'user',
+    Assistant: 'assistant',
+    System: 'system',
+    Function: 'function'
+} as const;
+
+export type V1ChatsPost200ResponseDataMessagesInnerRoleEnum = typeof V1ChatsPost200ResponseDataMessagesInnerRoleEnum[keyof typeof V1ChatsPost200ResponseDataMessagesInnerRoleEnum];
+
 /**
  * 
  * @export

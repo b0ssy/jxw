@@ -14,12 +14,10 @@ const routes = new Routes({
         message: z.string(),
       }),
     }),
-    resSuccessBody: z.object({
-      id: z.string(),
-    }),
+    resSuccessBody: zChat.extend({ _id: z.string() }),
     handler: async ({ ctl, body }) => {
-      const { _id } = await ctl.create(body.message);
-      return { id: _id.toHexString() };
+      const data = await ctl.create(body.message);
+      return data;
     },
   })
   .post("/v1/chats/{id}/message", "Create chat message", {
@@ -32,7 +30,7 @@ const routes = new Routes({
         id: z.string(),
       }),
     }),
-    resSuccessBody: z.object({}),
+    resSuccessBody: zChat.extend({ _id: z.string() }),
     handler: async ({ ctl, body, params }) => {
       await ctl.update(params.id, body.message);
     },
@@ -41,7 +39,7 @@ const routes = new Routes({
     tags: ["Chat"],
     req: z.object({}),
     resSuccessBody: z.object({
-      data: zChat.array(),
+      data: zChat.extend({ _id: z.string() }).array(),
       count: z.number(),
     }),
     handler: async ({ ctl }) => {

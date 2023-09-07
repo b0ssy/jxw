@@ -52,7 +52,22 @@ export class ChatController extends Controller {
       userId,
       messages,
     });
-    return { _id: insertedId };
+
+    // Get the inserted doc
+    const chat = await db.chats.findOne({ _id: insertedId });
+    if (!chat) {
+      throw new InternalServerError();
+    }
+
+    return {
+      ...chat,
+
+      // Convert to string
+      _id: chat._id.toHexString(),
+
+      // Filter away system messages
+      messages: chat.messages.filter((message) => message.role !== "system"),
+    };
   }
 
   // List all chats
@@ -63,15 +78,16 @@ export class ChatController extends Controller {
     // Get all chats
     const chats = await db.chats.find({ userId }).toArray();
 
-    // Filter away system messages
-    chats.forEach((chat) => {
-      chat.messages = chat.messages.filter(
-        (message) => message.role !== "system"
-      );
-    });
-
     return {
-      data: chats,
+      data: chats.map((chat) => ({
+        ...chat,
+
+        // Convert to string
+        _id: chat._id.toHexString(),
+
+        // Filter away system messages
+        messages: chat.messages.filter((message) => message.role !== "system"),
+      })),
       count: chats.length,
     };
   }
@@ -90,7 +106,7 @@ export class ChatController extends Controller {
     const userId = this.session.getUserIdOrThrow();
 
     // Ensure valid chat id
-    const chat = await db.chats.findOne({
+    let chat = await db.chats.findOne({
       _id: new ObjectId(chatId),
       userId,
     });
@@ -130,6 +146,22 @@ export class ChatController extends Controller {
     if (updateResult.modifiedCount !== 1) {
       throw new InternalServerError();
     }
+
+    // Get the updated doc
+    chat = await db.chats.findOne({ _id: new ObjectId(chatId) });
+    if (!chat) {
+      throw new InternalServerError();
+    }
+    
+    return {
+      ...chat,
+
+      // Convert to string
+      _id: chat._id.toHexString(),
+
+      // Filter away system messages
+      messages: chat.messages.filter((message) => message.role !== "system"),
+    };
   }
 
   // Delete chat
