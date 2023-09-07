@@ -18,6 +18,7 @@ import {
   GitHubLogoIcon,
   ExitIcon,
 } from "@radix-ui/react-icons";
+import { grayDark } from "@radix-ui/colors";
 import { useSelector, useDispatch } from "../../redux/store";
 import "./Home.css";
 
@@ -66,6 +67,7 @@ export default function Home() {
           width: "250px",
           height: "100%",
           padding: "8px",
+          backgroundColor: grayDark.gray2,
         }}
       >
         {/* Actions */}
