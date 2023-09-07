@@ -2,27 +2,24 @@ import { z } from "zod";
 
 import { ENV } from "../config";
 
-// config
-export const zConfig = z.object({
+// users
+export const zUser = z.object({
   id: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  key: z.enum([""]),
-  value: z.string().nullish(),
+  email: z.string(),
+  passwordHash: z.string(),
 });
-export type Config = z.infer<typeof zConfig>;
+export type User = z.infer<typeof zUser>;
 
-// event_log
-export const zEventLog = z.object({
+// chats
+export const zChat = z.object({
   id: z.string(),
   createdAt: z.date(),
-  updatedAt: z.date(),
-  type: z.enum([""]),
-  dataId: z.string().nullish(),
-  sessionUserId: z.string().nullish(),
-  data: z.string().nullish(),
+  userId: z.string(),
+  messages: z.object({}).array(),
 });
-export type EventLog = z.infer<typeof zEventLog>;
+export type Chat = z.infer<typeof zChat>;
 
 // Manage MongoDB
 export class Database {

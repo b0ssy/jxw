@@ -3,7 +3,6 @@ import { Router, Request, Response } from "express";
 import PromiseRouter from "express-promise-router";
 import { z, ZodObject, AnyZodObject, ZodSchema } from "zod";
 
-import db, { EventLog } from "./db";
 import { Session, decode } from "./session";
 import { makeApiResponse, sendSuccess } from "../helpers/api";
 
