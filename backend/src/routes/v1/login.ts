@@ -1,11 +1,11 @@
 import { z } from "zod";
 
-import { Routes } from "../data";
-import { AuthController } from "../controllers/auth";
+import { Routes } from "../../data";
+import { AuthController } from "../../controllers/auth";
 
 const routes = new Routes({
   createController: () => new AuthController(),
-}).post("/login", "Login account", {
+}).post("/v1/login", "Login account", {
   tags: ["Auth"],
   req: z.object({
     body: z.object({

@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-import { Routes } from "../data";
-import { ChatController } from "../controllers/chat";
+import { Routes } from "../../data";
+import { ChatController } from "../../controllers/chat";
 
 const routes = new Routes({
   createController: () => new ChatController(),
 })
-  .post("/chats", "Create chat", {
+  .post("/v1/chats", "Create chat", {
     tags: ["Chat"],
     req: z.object({
       body: z.object({
@@ -21,7 +21,7 @@ const routes = new Routes({
       return { chatId };
     },
   })
-  .post("/chats/{id}/message", "Add chat message", {
+  .post("/v1/chats/{id}/message", "Add chat message", {
     tags: ["Chat"],
     req: z.object({
       body: z.object({
@@ -35,7 +35,7 @@ const routes = new Routes({
       await ctl.update(body.message);
     },
   })
-  .delete("/chats", "Delete chat", {
+  .delete("/v1/chats", "Delete chat", {
     tags: ["Chat"],
     req: z.object({
       body: z.object({

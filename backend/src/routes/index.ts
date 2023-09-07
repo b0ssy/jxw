@@ -1,7 +1,7 @@
 import { Express } from "express";
 
-import login from "./login";
-import chats from "./chats";
+import v1login from "./v1/login";
+import v1chats from "./v1/chats";
 import webapp from "./webapp";
 import { pageNotFound } from "./page-not-found";
 import { errorHandler } from "./error-handler";
@@ -13,10 +13,10 @@ export const mountRoutes = async (app: Express) => {
   app.use(decodeSession);
 
   // Auth routes
-  app.use(login);
+  app.use(v1login);
   
   // Chat routes
-  app.use(chats);
+  app.use(v1chats);
 
   // Serve webapp UI
   app.use(webapp);
