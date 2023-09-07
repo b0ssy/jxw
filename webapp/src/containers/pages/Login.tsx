@@ -9,7 +9,6 @@ import {
   Button,
 } from "@radix-ui/themes";
 
-import { login } from "../../lib/api";
 import { sleepFn1000ms, isValidEmail } from "../../lib/utils";
 import { useSelector, useDispatch } from "../../redux/store";
 import { useBackend } from "../../lib/backend";
@@ -71,7 +70,12 @@ export default function Login() {
       justify="center"
       style={{ height: "100%" }}
     >
-      <Card style={{ width: "400px", padding: "36px 24px" }}>
+      <Card
+        style={{
+          width: "400px",
+          padding: "36px 24px",
+        }}
+      >
         <Heading>Login to your account</Heading>
         <Box height="6" />
 

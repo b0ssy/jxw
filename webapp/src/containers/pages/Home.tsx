@@ -32,6 +32,9 @@ export default function Home() {
   const backend = useBackend();
 
   const [message, setMessage] = useState("");
+  const [activeChat, setActiveChat] = useState<
+    V1ChatsGet200ResponseData["data"][0] | null
+  >(null);
   const [chats, setChats] = useState<V1ChatsGet200ResponseData | null>(null);
 
   // Query for chats
@@ -44,18 +47,36 @@ export default function Home() {
       });
   }, []);
 
-  // TODO
   function newChat() {
     setMessage("");
+    setActiveChat(null);
   }
 
-  // TODO
-  function sendMessage() {
+  async function sendMessage() {
     if (!message) {
       return;
     }
 
     setMessage("");
+
+    // Create new chat
+    if (!activeChat) {
+      // Get chat message and set active chat
+      const res = await backend
+        .createChatApi()
+        .v1ChatsPost({ v1ChatsPostRequestBody: { message } });
+      setActiveChat(res.data.data);
+    }
+
+    // Update new chat message
+    if (activeChat) {
+      // Get updated chat doc
+      const res = await backend.createChatApi().v1ChatsIdMessagePost({
+        id: activeChat._id,
+        v1ChatsIdMessagePostRequestBody: { message },
+      });
+      setActiveChat(res.data.data);
+    }
   }
 
   // function toggleTheme() {
