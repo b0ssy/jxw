@@ -7,7 +7,7 @@ import { Session, decode } from "./session";
 import { db } from "../data";
 import { makeApiResponse, sendSuccess } from "../helpers/api";
 
-export type Tag = "Admin";
+export type Tag = "Auth" | "Chat";
 
 export const openApiRegistryV1 = new OpenAPIRegistry();
 export const openApiRegistryV1Internal = new OpenAPIRegistry();
