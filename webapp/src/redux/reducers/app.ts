@@ -18,11 +18,12 @@ export const isSystemDarkMode = () => {
 };
 
 const updateThemeMode = (themeMode: State["themeMode"]) => {
-  if (themeMode === "dark") {
-    document.documentElement.classList.add("dark");
-  } else {
-    document.documentElement.classList.remove("dark");
-  }
+  // if (themeMode === "dark") {
+  //   document.documentElement.classList.add("dark");
+  // } else {
+  //   document.documentElement.classList.remove("dark");
+  // }
+  document.documentElement.classList.add("dark");
 };
 
 type Action =
@@ -36,7 +37,7 @@ type Action =
   | appActions.Action;
 
 const initialState: State = {
-  themeMode: isSystemDarkMode() ? "dark" : "light",
+  themeMode: "dark",
 };
 
 const reducer = (

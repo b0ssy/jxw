@@ -10,8 +10,8 @@ import {
 import {
   PlusIcon,
   ChatBubbleIcon,
-  SunIcon,
-  MoonIcon,
+  // SunIcon,
+  // MoonIcon,
   PaperPlaneIcon,
   PersonIcon,
   CaretUpIcon,
@@ -117,12 +117,14 @@ export default function Home() {
           )}
         </Flex>
 
-        {/* Account */}
         <Flex gap="2" style={{ marginBottom: "8px" }}>
-          <IconButton variant="surface" size="3" onClick={toggleTheme}>
+          {/* Theme */}
+          {/* <IconButton variant="surface" size="3" onClick={toggleTheme}>
             {themeMode === "light" && <SunIcon />}
             {themeMode === "dark" && <MoonIcon />}
-          </IconButton>
+          </IconButton> */}
+
+          {/* Account */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
               <Button variant="soft" size="3" style={{ flexGrow: "1" }}>
