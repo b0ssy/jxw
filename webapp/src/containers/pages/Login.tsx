@@ -12,10 +12,13 @@ import {
 import { login } from "../../lib/api";
 import { sleepFn1000ms, isValidEmail } from "../../lib/utils";
 import { useSelector, useDispatch } from "../../redux/store";
+import { useBackend } from "../../lib/backend";
 
 export default function Login() {
   const initialEmail = useSelector((state) => state.app.email || "");
   const dispatch = useDispatch();
+
+  const backend = useBackend();
 
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
@@ -40,9 +43,14 @@ export default function Login() {
     setErr({});
 
     setLoading(true);
-    const result = await sleepFn1000ms(login(email, password)).catch(
-      () => null
-    );
+    const result = await sleepFn1000ms(
+      backend.createAuthApi().v1LoginPost({
+        v1LoginPostRequestBody: {
+          email,
+          password,
+        },
+      })
+    ).catch(() => null);
     setLoading(false);
     if (!result?.data) {
       setPassword("");
@@ -52,7 +60,7 @@ export default function Login() {
 
     dispatch({
       type: "app/LOGIN",
-      accessToken: result.data.accessToken,
+      accessToken: result.data.data.accessToken,
     });
   }
 
