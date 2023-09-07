@@ -27,8 +27,8 @@ export const zEnv = z.object({
   // Database
   MONGODB_URI: z.string().default(""),
 
-  // ChatGPT
-  CHATGPT_API_KEY: z.string().default(""),
+  // OpenAI
+  OPENAI_API_KEY: z.string().default(""),
 
   // Webapp
   WEBAPP_BUILD_DIR: z
