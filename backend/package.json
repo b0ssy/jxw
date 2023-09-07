@@ -6,10 +6,12 @@
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.5.9",
     "cors": "^2.8.5",
+    "dotenv-cli": "^7.3.0",
     "typescript": "^5.2.2"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^5.5.0",
+    "axios": "^1.5.0",
     "chalk": "^4.1.0",
     "commander": "^11.0.0",
     "dotenv": "^16.3.1",
@@ -28,6 +30,7 @@
     "watch": "npx tsc -w",
     "init": "node build init",
     "start": "dotenv -e .env node build run",
+    "openapi": "dotenv -e .env node build openapi -d openapi",
     "test": "dotenv -e .env.test jest -- --silent=false --runInBand"
   }
 }

@@ -5,6 +5,7 @@ import { Command } from "commander";
 
 import init from "./src/apps/init";
 import run from "./src/apps/run";
+import openapi from "./src/apps/openapi";
 import { Logger } from "./src/helpers/logger";
 
 const LOG = new Logger("index");
@@ -35,6 +36,18 @@ program
   .description("Run server")
   .action(() => {
     run();
+  });
+
+program
+  .command("openapi")
+  .description("Generate OpenAPI documents and clients")
+  .requiredOption(
+    "-d, --dir <directory>",
+    "Directory to generate OpenAPI documents and clients",
+    "./openapi"
+  )
+  .action((options) => {
+    openapi({ dir: options.dir });
   });
 
 program.parse();
