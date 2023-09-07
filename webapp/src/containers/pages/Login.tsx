@@ -32,16 +32,17 @@ export default function Login() {
     setErr({});
 
     setLoading(true);
-    const result = await sleepFn1000ms(
-      login(email, password).catch((err: Error) => {
-        setErr({ login: err.message ?? "Incorrect email or password" });
-        return null;
-      })
+    const result = await sleepFn1000ms(login(email, password)).catch(
+      () => null
     );
     setLoading(false);
-    if (result) {
-      dispatch({ type: "app/LOGIN", accessToken: result.accessToken });
+    if (!result) {
+      setPassword("");
+      setErr({ login: "Incorrect email or password" });
+      return;
     }
+
+    dispatch({ type: "app/LOGIN", accessToken: result.accessToken });
   }
 
   return (
@@ -124,7 +125,11 @@ export default function Login() {
           <Box height="4" />
 
           {/* Login error */}
-          {!!err.login && <p>{err.login}</p>}
+          {!!err.login && (
+            <Text size="1" color="red">
+              {err.login}
+            </Text>
+          )}
 
           {/* Login button */}
           <Box height="2" />

@@ -15,6 +15,7 @@ export const login = async (email: string, password: string) => {
   const url = buildUrl("v1/login");
   const res = await fetch(url, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
   const json = await res.json();
