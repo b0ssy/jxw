@@ -1,0 +1,27 @@
+# Ignore everything
+*
+
+# Except these...
+!openapi
+!openapi/**/*
+!src
+!src/**/*
+!test
+!test/**/*
+!.eslintignore
+!.eslintrc.js
+!.gitignore
+!Dockerfile
+!index.ts
+!jest.config.ts
+!knexfile.ts
+!package-lock.json
+!package.json
+!README.md
+!tsconfig.json
+
+# Finally, never these!
+.*/
+**/.*/
+.env
+/**/*.env
