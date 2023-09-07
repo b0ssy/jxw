@@ -148,7 +148,7 @@ export default function Login() {
         )}
 
         {/* Login button */}
-        <Box height="2" />
+        <Box height="6" />
         <Button
           disabled={loading}
           size="3"

@@ -13,6 +13,7 @@ import {
   PaperPlaneIcon,
   PersonIcon,
   CaretUpIcon,
+  GitHubLogoIcon,
   ExitIcon,
 } from "@radix-ui/react-icons";
 import { useSelector, useDispatch } from "../../redux/store";
@@ -35,6 +36,21 @@ export default function Home() {
     }
 
     setMessage("");
+  }
+
+  function toggleTheme() {
+    dispatch({
+      type: "app/SET_THEME_MODE",
+      themeMode: themeMode === "light" ? "dark" : "light",
+    });
+  }
+
+  function openGitHub() {
+    window.open("https://github.com/b0ssy/jxw");
+  }
+
+  function logout() {
+    dispatch({ type: "app/LOGOUT" });
   }
 
   return (
@@ -74,16 +90,7 @@ export default function Home() {
 
         {/* Account */}
         <Flex gap="2" style={{ marginBottom: "8px" }}>
-          <IconButton
-            variant="surface"
-            size="3"
-            onClick={() => {
-              dispatch({
-                type: "app/SET_THEME_MODE",
-                themeMode: themeMode === "light" ? "dark" : "light",
-              });
-            }}
-          >
+          <IconButton variant="surface" size="3" onClick={toggleTheme}>
             {themeMode === "light" && <SunIcon />}
             {themeMode === "dark" && <MoonIcon />}
           </IconButton>
@@ -97,10 +104,12 @@ export default function Home() {
               </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content style={{ width: "186px" }}>
-              <DropdownMenu.Item
-                color="red"
-                onClick={() => dispatch({ type: "app/LOGOUT" })}
-              >
+              <DropdownMenu.Item onClick={openGitHub}>
+                GitHub
+                <GitHubLogoIcon />
+              </DropdownMenu.Item>
+              <DropdownMenu.Separator />
+              <DropdownMenu.Item color="red" onClick={logout}>
                 Logout
                 <ExitIcon />
               </DropdownMenu.Item>
