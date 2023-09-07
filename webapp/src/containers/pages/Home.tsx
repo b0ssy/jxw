@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Flex,
   Button,
@@ -19,14 +19,30 @@ import {
   ExitIcon,
 } from "@radix-ui/react-icons";
 import { grayDark } from "@radix-ui/colors";
-import { useSelector, useDispatch } from "../../redux/store";
+
+import { /**useSelector, */ useDispatch } from "../../redux/store";
 import "./Home.css";
+import { V1ChatsGet200ResponseData } from "../../lib/backend/api";
+import { useBackend } from "../../lib/backend";
 
 export default function Home() {
-  const themeMode = useSelector((state) => state.app.themeMode);
+  // const themeMode = useSelector((state) => state.app.themeMode);
   const dispatch = useDispatch();
 
+  const backend = useBackend();
+
   const [message, setMessage] = useState("");
+  const [chats, setChats] = useState<V1ChatsGet200ResponseData | null>(null);
+
+  // Query for chats
+  useEffect(() => {
+    backend
+      .createChatApi()
+      .v1ChatsGet()
+      .then((res) => {
+        setChats(res.data.data);
+      });
+  }, []);
 
   // TODO
   function newChat() {
@@ -42,12 +58,12 @@ export default function Home() {
     setMessage("");
   }
 
-  function toggleTheme() {
-    dispatch({
-      type: "app/SET_THEME_MODE",
-      themeMode: themeMode === "light" ? "dark" : "light",
-    });
-  }
+  // function toggleTheme() {
+  //   dispatch({
+  //     type: "app/SET_THEME_MODE",
+  //     themeMode: themeMode === "light" ? "dark" : "light",
+  //   });
+  // }
 
   function openGitHub() {
     window.open("https://github.com/b0ssy/jxw");
@@ -92,31 +108,30 @@ export default function Home() {
 
         {/* Chats */}
         <Flex direction="column" grow="1" my="2" style={{ overflowY: "auto" }}>
-          {["testing123", "hello!", "loooooooooooooooooooonggggggtext"].map(
-            (item, index) => {
-              return (
-                <Flex
-                  key={index}
-                  className="chat-message"
-                  p="2"
-                  align="center"
-                  gap="2"
+          {chats?.data.map((chat, index) => {
+            return (
+              <Flex
+                key={index}
+                className="chat-message"
+                p="2"
+                align="center"
+                gap="2"
+              >
+                <ChatBubbleIcon width="24px" />
+                <Text
+                  style={{
+                    width: "calc(100% - 24px)",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
                 >
-                  <ChatBubbleIcon width="24px" />
-                  <Text
-                    style={{
-                      width: "calc(100% - 24px)",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {item}
-                  </Text>
-                </Flex>
-              );
-            }
-          )}
+                  {chat.messages.length ? chat.messages[0].content : "No data"}
+                </Text>
+              </Flex>
+            );
+          })}
+          {!chats?.data.length && <Text>No chat history</Text>}
         </Flex>
 
         <Flex gap="2" style={{ marginBottom: "8px" }}>
