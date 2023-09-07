@@ -44,6 +44,7 @@ export class Database {
     });
   }
 
+  // Connect to database
   async connect() {
     await this.client.connect();
     LOG.info("Connected to MongoDB successfully");
@@ -52,23 +53,32 @@ export class Database {
     await this.createIndexes();
   }
 
+  // Create indexes
   async createIndexes() {
+    // users
     await this.users.createIndex({ email: 1 }, { unique: true });
+
+    // chats
+    await this.chats.createIndex({ _id: 1, userId: 1 });
   }
 
+  // Close database connection
   async close() {
     await this.client.close();
     LOG.info("Closed MongoDB connection successfully");
   }
 
+  // Get handle to "users" collection
   get users() {
     return this._db().collection<User>("users");
   }
 
+  // Get handle to "chats" collection
   get chats() {
     return this._db().collection<Chat>("chats");
   }
 
+  // Get default database
   _db() {
     return this.client.db();
   }
