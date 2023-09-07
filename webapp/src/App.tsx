@@ -8,9 +8,10 @@ import Login from "./containers/pages/Login";
 import { useSelector } from "./redux/store";
 
 function App() {
+  const themeMode = useSelector((state) => state.app.themeMode);
   const isLoggedIn = useSelector((state) => !!state.app.accessToken);
   return (
-    <Theme>
+    <Theme appearance={themeMode} style={{ height: "100vh" }}>
       <BrowserRouter>
         <Routes>
           {isLoggedIn && (

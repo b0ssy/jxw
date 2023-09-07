@@ -47,10 +47,15 @@ export default function Login() {
   return (
     <>
       {/* Content */}
-      <Flex direction="column" align="center" justify="center">
-        <Box>
+      <Flex
+        direction="column"
+        align="center"
+        justify="center"
+        style={{ height: "100%" }}
+      >
+        <div style={{ width: "300px" }}>
           <Heading>Login</Heading>
-          <Box height="2" />
+          <Box height="4" />
 
           {/* Email input */}
           <Text>Email</Text>
@@ -68,7 +73,12 @@ export default function Login() {
                 dispatch({ type: "app/SET_EMAIL", email: e.target.value });
               }}
               onKeyUp={(e) => {
-                if (e.key === "Enter" && email) {
+                if (e.key === "Enter") {
+                  if (!isValidEmail(email)) {
+                    emailRef?.focus();
+                    setErr({ email: "Please enter a valid email" });
+                    return;
+                  }
                   passwordRef?.focus();
                 }
               }}
@@ -87,7 +97,7 @@ export default function Login() {
           <TextField.Root>
             <TextField.Input
               autoFocus={!!email}
-              variant={err.email ? "soft" : undefined}
+              variant={err.password ? "soft" : undefined}
               color={err.password ? "red" : undefined}
               type="password"
               value={password}
@@ -99,7 +109,7 @@ export default function Login() {
                 setPassword(event.target.value);
               }}
               onKeyUp={(e) => {
-                if (e.key === "Enter" && email && password) {
+                if (e.key === "Enter") {
                   handleLogin();
                 }
               }}
@@ -118,8 +128,10 @@ export default function Login() {
 
           {/* Login button */}
           <Box height="2" />
-          <Button onClick={handleLogin}>Login</Button>
-        </Box>
+          <Button style={{ width: "100%" }} onClick={handleLogin}>
+            Login
+          </Button>
+        </div>
       </Flex>
 
       {/* Spinner */}
