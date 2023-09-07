@@ -5,17 +5,15 @@ import { ENV } from "../config";
 
 // users
 export const zUser = z.object({
-  id: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  email: z.string(),
-  passwordHash: z.string(),
+  email: z.string().optional(),
+  passwordHash: z.string().optional(),
 });
 export type User = z.infer<typeof zUser>;
 
 // chats
 export const zChat = z.object({
-  id: z.string(),
   createdAt: z.date(),
   userId: z.string(),
   messages: z.object({}).array(),
@@ -42,6 +40,18 @@ export class Database {
 
   async close() {
     await this.client.close();
+  }
+
+  get users() {
+    return this._db().collection<User>("users");
+  }
+
+  get chats() {
+    return this._db().collection<Chat>("chats");
+  }
+
+  _db() {
+    return this.client.db();
   }
 }
 

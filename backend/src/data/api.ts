@@ -4,6 +4,7 @@ import PromiseRouter from "express-promise-router";
 import { z, ZodObject, AnyZodObject, ZodSchema } from "zod";
 
 import { Session, decode } from "./session";
+import { db } from "../data";
 import { makeApiResponse, sendSuccess } from "../helpers/api";
 
 export type Tag = "Admin";
@@ -31,7 +32,6 @@ export type ControllerOptions = {
 
 export class Controller {
   session: Session;
-  db = {};
 
   constructor(options?: ControllerOptions) {
     this.session =
