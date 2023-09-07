@@ -4,7 +4,6 @@ import PromiseRouter from "express-promise-router";
 import { z, ZodObject, AnyZodObject, ZodSchema } from "zod";
 
 import { Session, decode } from "./session";
-import { db } from "../data";
 import { makeApiResponse, sendSuccess } from "../helpers/api";
 
 export type Tag = "Auth" | "Chat";

@@ -2,6 +2,9 @@ import { MongoClient, ServerApiVersion } from "mongodb";
 import { z } from "zod";
 
 import { ENV } from "../config";
+import { Logger } from "../helpers/logger";
+
+const LOG = new Logger("data/db");
 
 // users
 export const zUser = z.object({
@@ -36,10 +39,12 @@ export class Database {
 
   async connect() {
     await this.client.connect();
+    LOG.info("Connected to MongoDB successfully");
   }
 
   async close() {
     await this.client.close();
+    LOG.info("Closed MongoDB connection successfully");
   }
 
   get users() {
