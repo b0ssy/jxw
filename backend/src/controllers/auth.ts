@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import { MongoServerError } from "mongodb";
 
 import { ENV } from "../config";
 import { db } from "../data";
@@ -31,28 +32,39 @@ export class AuthController extends Controller {
 
     // Create an empty user
     const now = new Date();
-    const insertResult = await db.users.insertOne({
-      createdAt: now,
-      updatedAt: now,
-      email,
-    });
+    const { insertedId } = await db.users
+      .insertOne({
+        createdAt: now,
+        updatedAt: now,
+        email,
+      })
+      .catch((err) => {
+        // Check if email already exists
+        if (err instanceof MongoServerError) {
+          throw new BadRequestError(
+            "Email is already registered",
+            "email_already_exists"
+          );
+        }
+        throw new InternalServerError();
+      });
 
     // Create password hash based on user id + password
     const passwordHash = AuthController.createPasswordHash(
       password,
-      insertResult.insertedId.toHexString()
+      insertedId.toHexString()
     );
 
     // Update user's password hash
     const updateResult = await db.users.updateOne(
-      { _id: insertResult.insertedId },
+      { _id: insertedId },
       { $set: { passwordHash } }
     );
     if (updateResult.modifiedCount !== 1) {
       throw new InternalServerError();
     }
 
-    return { _id: insertResult.insertedId };
+    return { _id: insertedId };
   };
 
   // Login to user account

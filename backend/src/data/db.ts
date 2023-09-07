@@ -40,6 +40,13 @@ export class Database {
   async connect() {
     await this.client.connect();
     LOG.info("Connected to MongoDB successfully");
+
+    // Automatically create indexes for convenience sake
+    await this.createIndexes();
+  }
+
+  async createIndexes() {
+    await this.users.createIndex({ email: 1 }, { unique: true });
   }
 
   async close() {
