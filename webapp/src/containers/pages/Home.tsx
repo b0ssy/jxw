@@ -172,7 +172,12 @@ export default function Home() {
                 <CaretUpIcon />
               </Button>
             </DropdownMenu.Trigger>
-            <DropdownMenu.Content style={{ width: "186px" }}>
+            <DropdownMenu.Content
+              style={{
+                // width: "186px",
+                width: "234px",
+              }}
+            >
               <DropdownMenu.Item onClick={openGitHub}>
                 GitHub
                 <GitHubLogoIcon />
