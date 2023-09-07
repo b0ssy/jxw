@@ -9,7 +9,7 @@ export class ChatController extends Controller {
   }
 
   // TODO
-  async update(message: string) {}
+  async update(chatId: string, message: string) {}
 
   // TODO
   async delete(chatId: string) {}

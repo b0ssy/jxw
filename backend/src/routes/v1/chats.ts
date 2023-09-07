@@ -27,24 +27,27 @@ const routes = new Routes({
       body: z.object({
         message: z.string(),
       }),
+      params: z.object({
+        id: z.string(),
+      }),
     }),
     resSuccessBody: z.object({
       chatId: z.string(),
     }),
-    handler: async ({ ctl, body }) => {
-      await ctl.update(body.message);
+    handler: async ({ ctl, body, params }) => {
+      await ctl.update(params.id, body.message);
     },
   })
-  .delete("/v1/chats", "Delete chat", {
+  .delete("/v1/chats/{id}", "Delete chat", {
     tags: ["Chat"],
     req: z.object({
-      body: z.object({
-        chatId: z.string(),
+      params: z.object({
+        id: z.string(),
       }),
     }),
     resSuccessBody: z.object({}),
-    handler: async ({ ctl, body }) => {
-      await ctl.delete(body.chatId);
+    handler: async ({ ctl, params }) => {
+      await ctl.delete(params.id);
     },
   });
 
