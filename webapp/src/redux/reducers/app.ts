@@ -5,7 +5,7 @@ import * as appActions from "../actions/app";
 
 export const zState = z.object({
   themeMode: z.enum(["light", "dark"]),
-  username: z.string().optional(),
+  email: z.string().optional(),
   accessToken: z.string().optional(),
 });
 export type State = z.infer<typeof zState>;
@@ -54,8 +54,8 @@ const reducer = (
       updateThemeMode(action.themeMode);
       return { ...state, themeMode: action.themeMode };
     }
-    case "app/SET_USERNAME": {
-      return { ...state, username: action.username };
+    case "app/SET_EMAIL": {
+      return { ...state, email: action.email };
     }
     case "app/LOGIN": {
       return { ...state, accessToken: action.accessToken };

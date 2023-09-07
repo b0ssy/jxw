@@ -4,8 +4,8 @@ export type Action =
       themeMode: "light" | "dark";
     }
   | {
-      type: "app/SET_USERNAME";
-      username: string;
+      type: "app/SET_EMAIL";
+      email: string;
     }
   | {
       type: "app/LOGIN";
