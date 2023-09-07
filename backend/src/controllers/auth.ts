@@ -1,21 +1,61 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import { z } from "zod";
 
 import { ENV } from "../config";
 import { db } from "../data";
 import { Controller } from "../data/api";
 import { JWTPayload } from "../data/session";
-import { BadRequestError, NotAuthorizedError } from "../errors";
-
-export const zTokens = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
-});
-export type Tokens = z.infer<typeof zTokens>;
+import {
+  BadRequestError,
+  InternalServerError,
+  NotAuthorizedError,
+} from "../errors";
 
 export class AuthController extends Controller {
-  // Login
+  // Create new user account
+  createUser = async (email: string, password: string) => {
+    // Validate email
+    if (!AuthController.isValidEmail(email)) {
+      throw new BadRequestError("Please provide valid email", "invalid_email");
+    }
+
+    // Validate password
+    if (!password) {
+      throw new BadRequestError(
+        "Please provide valid password",
+        "invalid_password"
+      );
+    }
+
+    // TODO: Check duplicate email or check insert error unique violation
+
+    // Create an empty user
+    const now = new Date();
+    const insertResult = await db.users.insertOne({
+      createdAt: now,
+      updatedAt: now,
+      email,
+    });
+
+    // Create password hash based on user id + password
+    const passwordHash = AuthController.createPasswordHash(
+      password,
+      insertResult.insertedId.toHexString()
+    );
+
+    // Update user's password hash
+    const updateResult = await db.users.updateOne(
+      { _id: insertResult.insertedId },
+      { $set: { passwordHash } }
+    );
+    if (updateResult.modifiedCount !== 1) {
+      throw new InternalServerError();
+    }
+
+    return { _id: insertResult.insertedId };
+  };
+
+  // Login to user account
   login = async (email: string, password: string) => {
     // Validate email
     if (!AuthController.isValidEmail(email)) {
@@ -36,10 +76,7 @@ export class AuthController extends Controller {
     const userId = user._id.toHexString();
 
     // Check if password hash matches
-    const { passwordHash } = AuthController.createPasswordHash(
-      password,
-      userId
-    );
+    const passwordHash = AuthController.createPasswordHash(password, userId);
     if (passwordHash !== user.passwordHash) {
       throw new NotAuthorizedError(
         "Please provide valid credentials",
@@ -65,16 +102,16 @@ export class AuthController extends Controller {
     return jwt.sign(payload, ENV.JWT_SECRET, signOptions);
   };
 
-  // Create a hashed password with uuid salt
+  // Create a hashed password with salt
   // If no salt is provided, a salt will be auto-generated
   // for hashing with the password
   // Returns hashed password and salt
-  static createPasswordHash = (password: string, uuid: string) => {
+  static createPasswordHash = (password: string, salt: string) => {
     const passwordHash = crypto
       .createHash("sha256")
-      .update(password + uuid)
+      .update(password + salt)
       .digest("hex");
-    return { passwordHash, uuid };
+    return passwordHash;
   };
 
   // Check if email address format is valid

@@ -4,11 +4,11 @@ import { Controller } from "../data/api";
 
 export class Controllers extends Controller {
   auth() {
-    new AuthController({ ctl: this });
+    return new AuthController({ ctl: this });
   }
 
   chat() {
-    new ChatController({ ctl: this });
+    return new ChatController({ ctl: this });
   }
 }
 
