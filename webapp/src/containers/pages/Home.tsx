@@ -60,8 +60,8 @@ export default function Home() {
           <Button
             variant="outline"
             size="3"
-            onClick={newChat}
             style={{ flexGrow: "1" }}
+            onClick={newChat}
           >
             <PlusIcon />
             New chat

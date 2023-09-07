@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Box, Flex, Heading, Text, TextField, Button } from "@radix-ui/themes";
+import {
+  Box,
+  Card,
+  Flex,
+  Heading,
+  Text,
+  TextField,
+  Button,
+} from "@radix-ui/themes";
 
 import { login } from "../../lib/api";
 import { sleepFn1000ms, isValidEmail } from "../../lib/utils";
@@ -49,103 +57,107 @@ export default function Login() {
   }
 
   return (
-    <>
-      {/* Content */}
-      <Flex
-        direction="column"
-        align="center"
-        justify="center"
-        style={{ height: "100%" }}
-      >
-        <div style={{ width: "300px" }}>
-          <Heading>Login</Heading>
-          <Box height="4" />
+    <Flex
+      direction="column"
+      align="center"
+      justify="center"
+      style={{ height: "100%" }}
+    >
+      <Card style={{ width: "400px", padding: "36px 24px" }}>
+        <Heading>Login to your account</Heading>
+        <Box height="6" />
 
-          {/* Email input */}
-          <Text>Email</Text>
-          <TextField.Root>
-            <TextField.Input
-              variant={err.email ? "soft" : undefined}
-              color={err.email ? "red" : undefined}
-              value={email}
-              ref={(ref) => {
-                emailRef = ref;
-              }}
-              onChange={(e) => {
-                setErr({});
-                setEmail(e.target.value);
-                dispatch({ type: "app/SET_EMAIL", email: e.target.value });
-              }}
-              onKeyUp={(e) => {
-                if (e.key === "Enter") {
-                  if (!isValidEmail(email)) {
-                    emailRef?.focus();
-                    setErr({ email: "Please enter a valid email" });
-                    return;
-                  }
-                  passwordRef?.focus();
+        {/* Email input */}
+        <Text size="2">Email</Text>
+        <Box height="1" />
+        <TextField.Root>
+          <TextField.Input
+            size="3"
+            disabled={loading}
+            autoFocus={!email}
+            variant={err.email ? "soft" : undefined}
+            color={err.email ? "red" : undefined}
+            value={email}
+            ref={(ref) => {
+              emailRef = ref;
+            }}
+            onChange={(e) => {
+              setErr({});
+              setEmail(e.target.value);
+              dispatch({ type: "app/SET_EMAIL", email: e.target.value });
+            }}
+            onKeyUp={(e) => {
+              if (e.key === "Enter") {
+                if (!isValidEmail(email)) {
+                  emailRef?.focus();
+                  setErr({ email: "Please enter a valid email" });
+                  return;
                 }
-              }}
-            />
-          </TextField.Root>
-          {/* Email error */}
-          {!!err.email && (
-            <Text size="1" color="red">
-              {err.email}
-            </Text>
-          )}
-          <Box height="4" />
+                passwordRef?.focus();
+              }
+            }}
+          />
+        </TextField.Root>
+        {/* Email error */}
+        {!!err.email && (
+          <Text size="1" color="red">
+            {err.email}
+          </Text>
+        )}
+        <Box height="4" />
 
-          {/* Password input */}
-          <Text>Password</Text>
-          <TextField.Root>
-            <TextField.Input
-              autoFocus={!!email}
-              variant={err.password ? "soft" : undefined}
-              color={err.password ? "red" : undefined}
-              type="password"
-              value={password}
-              ref={(ref) => {
-                passwordRef = ref;
-              }}
-              onChange={(event) => {
-                setErr({});
-                setPassword(event.target.value);
-              }}
-              onKeyUp={(e) => {
-                if (e.key === "Enter") {
-                  handleLogin();
-                }
-              }}
-            />
-          </TextField.Root>
-          {/* Password error */}
-          {!!err.password && (
-            <Text size="1" color="red">
-              {err.password}
-            </Text>
-          )}
-          <Box height="4" />
+        {/* Password input */}
+        <Text size="2">Password</Text>
+        <Box height="1" />
+        <TextField.Root>
+          <TextField.Input
+            size="3"
+            disabled={loading}
+            autoFocus={!!email}
+            variant={err.password ? "soft" : undefined}
+            color={err.password ? "red" : undefined}
+            type="password"
+            value={password}
+            ref={(ref) => {
+              passwordRef = ref;
+            }}
+            onChange={(event) => {
+              setErr({});
+              setPassword(event.target.value);
+            }}
+            onKeyUp={(e) => {
+              if (e.key === "Enter") {
+                handleLogin();
+              }
+            }}
+          />
+        </TextField.Root>
+        {/* Password error */}
+        {!!err.password && (
+          <Text size="1" color="red">
+            {err.password}
+          </Text>
+        )}
+        <Box height="4" />
 
-          {/* Login error */}
-          {!!err.login && (
-            <Text size="1" color="red">
-              {err.login}
-            </Text>
-          )}
+        {/* Login error */}
+        {!!err.login && (
+          <Text size="1" color="red">
+            {err.login}
+          </Text>
+        )}
 
-          {/* Login button */}
-          <Box height="2" />
-          <Button style={{ width: "100%" }} onClick={handleLogin}>
-            Login
-          </Button>
-        </div>
-      </Flex>
-
-      {/* Spinner */}
-      {/* <Overlay open={loading}>
-        <Spinner />
-      </Overlay> */}
-    </>
+        {/* Login button */}
+        <Box height="2" />
+        <Button
+          disabled={loading}
+          size="3"
+          style={{ width: "100%" }}
+          onClick={handleLogin}
+        >
+          Login
+        </Button>
+      </Card>
+    </Flex>
   );
 }
