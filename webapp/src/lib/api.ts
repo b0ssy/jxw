@@ -1,13 +1,43 @@
-// TODO
+import { z } from "zod";
+
+import { ENV } from "../config";
+
+export const zLoginResponse = z.object({
+  userId: z.string(),
+  accessToken: z.string(),
+});
+
+export const zCreateChatResponse = z.object({
+  id: z.string(),
+});
+
 export const login = async (email: string, password: string) => {
-  return "";
+  const url = buildUrl("v1/login");
+  const res = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+  const json = await res.json();
+  const data = zLoginResponse.safeParse(json);
+  return data.success ? data.data : null;
+};
+
+export const createChat = async () => {
+  const url = buildUrl("v1/chats");
+  const res = await fetch(url, { method: "POST" });
+  const json = await res.json();
+  const data = zCreateChatResponse.safeParse(json);
+  return data.success ? data.data : null;
 };
 
 // TODO
-export const createChat = async () => {};
+export const createChatMessage = async (id: string, message: string) => {};
 
-// TODO
-export const createChatMessage = async (chatId: string, message: string) => {};
+export const deleteChat = async (id: string) => {
+  const url = buildUrl(`v1/chats/${id}`);
+  await fetch(url, { method: "DELETE" });
+};
 
-// TODO
-export const deleteChat = async (chatId: string) => {};
+export const buildUrl = (path: string) => {
+  return `${ENV.BASE_URL}${path}`;
+};

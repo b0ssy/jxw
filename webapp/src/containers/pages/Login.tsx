@@ -32,15 +32,15 @@ export default function Login() {
     setErr({});
 
     setLoading(true);
-    const accessToken = await sleepFn1000ms(
+    const result = await sleepFn1000ms(
       login(email, password).catch((err: Error) => {
         setErr({ login: err.message ?? "Incorrect email or password" });
         return null;
       })
     );
     setLoading(false);
-    if (accessToken) {
-      dispatch({ type: "app/LOGIN", accessToken });
+    if (result) {
+      dispatch({ type: "app/LOGIN", accessToken: result.accessToken });
     }
   }
 
