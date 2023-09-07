@@ -2,14 +2,25 @@ import { z } from "zod";
 
 import { ENV } from "../config";
 
-export const zLoginResponse = z.object({
-  userId: z.string(),
-  accessToken: z.string(),
-});
+export const makeResponse = <T extends z.AnyZodObject>(dataSchema: T) =>
+  z.object({
+    code: z.string(),
+    data: dataSchema.nullish(),
+    message: z.string().nullable(),
+  });
 
-export const zCreateChatResponse = z.object({
-  id: z.string(),
-});
+export const zLoginResponse = makeResponse(
+  z.object({
+    userId: z.string(),
+    accessToken: z.string(),
+  })
+);
+
+export const zCreateChatResponse = makeResponse(
+  z.object({
+    id: z.string(),
+  })
+);
 
 export const login = async (email: string, password: string) => {
   const url = buildUrl("v1/login");

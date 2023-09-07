@@ -36,13 +36,16 @@ export default function Login() {
       () => null
     );
     setLoading(false);
-    if (!result) {
+    if (!result?.data) {
       setPassword("");
       setErr({ login: "Incorrect email or password" });
       return;
     }
 
-    dispatch({ type: "app/LOGIN", accessToken: result.accessToken });
+    dispatch({
+      type: "app/LOGIN",
+      accessToken: result.data.accessToken,
+    });
   }
 
   return (
