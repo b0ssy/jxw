@@ -8,6 +8,7 @@ import {
   TextField,
   Button,
 } from "@radix-ui/themes";
+import { EnterIcon } from "@radix-ui/react-icons";
 
 import { sleepFn1000ms, isValidEmail } from "../../lib/utils";
 import { useSelector, useDispatch } from "../../redux/store";
@@ -168,6 +169,7 @@ export default function Login() {
           onClick={handleLogin}
         >
           Login
+          <EnterIcon />
         </Button>
       </Card>
     </Flex>
