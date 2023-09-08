@@ -23,6 +23,7 @@ import {
   ExitIcon,
 } from "@radix-ui/react-icons";
 import { grayDark, tealDark, irisDark } from "@radix-ui/colors";
+import moment from "moment";
 
 import { /**useSelector, */ useDispatch } from "../../redux/store";
 import "./Home.css";
@@ -61,11 +62,16 @@ export default function Home() {
   function newChat() {
     setMessage("");
     setActiveChat(null);
+
+    // Focus on message box
     messageInputRef.current?.focus();
   }
 
   function selectChat(chat: Chat) {
     setActiveChat(chat);
+
+    // Focus on message box
+    messageInputRef.current?.focus();
 
     // Chat window might be scrolled to bottom previously
     // So scroll it back to top here
@@ -328,6 +334,18 @@ export default function Home() {
                 if (message.role !== "assistant" && message.role !== "user") {
                   return null;
                 }
+                const now = moment();
+                const date = moment(message.date);
+                const dateStr = `${
+                  // today
+                  +now.clone().startOf("day") === +date.clone().startOf("day")
+                    ? " "
+                    : // yesterday
+                    +now.clone().subtract(1, "day").startOf("day") ===
+                      +date.clone().startOf("day")
+                    ? "yesterday, "
+                    : `${date.format("D MMM YY")}, `
+                }${date.format("h:mm a")}`;
                 return (
                   <Flex
                     key={index}
@@ -342,10 +360,19 @@ export default function Home() {
                             : irisDark.iris4,
                       }}
                     >
-                      <Flex direction="column">
+                      <Flex direction="column" align="end">
                         {message.content.split("\n").map((sentence, index) => (
                           <div key={index}>{sentence}</div>
                         ))}
+                      </Flex>
+                      <div style={{ height: "4px" }} />
+                      <Flex
+                        direction="column"
+                        align={message.role === "assistant" ? "start" : "end"}
+                      >
+                        <Text size="1" color="gray">
+                          {dateStr}
+                        </Text>
                       </Flex>
                     </Card>
                   </Flex>
