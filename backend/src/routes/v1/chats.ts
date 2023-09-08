@@ -36,6 +36,19 @@ const routes = new Routes({
       return data;
     },
   })
+  .get("/v1/chats/{id}", "Get chat", {
+    tags: ["Chat"],
+    req: z.object({
+      params: z.object({
+        id: z.string(),
+      }),
+    }),
+    resSuccessBody: zChat.extend({ _id: z.string() }),
+    handler: async ({ ctl, params }) => {
+      const data = await ctl.get(params.id);
+      return data;
+    },
+  })
   .get("/v1/chats", "Get chats", {
     tags: ["Chat"],
     req: z.object({}),

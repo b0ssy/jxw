@@ -235,6 +235,86 @@
           "data"
         ]
       },
+      "V1Chats_id_Get200Response": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "createdAt": {
+                "type": "string"
+              },
+              "updatedAt": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "idle",
+                  "running"
+                ]
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "assistant",
+                        "system",
+                        "function"
+                      ]
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "result": {
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "date",
+                    "role",
+                    "content"
+                  ]
+                }
+              },
+              "_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "createdAt",
+              "updatedAt",
+              "userId",
+              "status",
+              "messages",
+              "_id"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "data"
+        ]
+      },
       "V1ChatsGet200Response": {
         "type": "object",
         "properties": {
@@ -478,6 +558,35 @@
       }
     },
     "/v1/chats/{id}": {
+      "get": {
+        "summary": "Get chat",
+        "description": "Get chat",
+        "tags": [
+          "Chat"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation sucessful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Chats_id_Get200Response"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "summary": "Delete chat",
         "description": "Delete chat",

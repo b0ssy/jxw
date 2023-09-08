@@ -95,6 +95,31 @@ export interface V1ChatsIdDelete200Response {
 /**
  * 
  * @export
+ * @interface V1ChatsIdGet200Response
+ */
+export interface V1ChatsIdGet200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdGet200Response
+     */
+    'code': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdGet200Response
+     */
+    'message': string | null;
+    /**
+     * 
+     * @type {V1ChatsPost200ResponseData}
+     * @memberof V1ChatsIdGet200Response
+     */
+    'data': V1ChatsPost200ResponseData;
+}
+/**
+ * 
+ * @export
  * @interface V1ChatsIdMessagePost200Response
  */
 export interface V1ChatsIdMessagePost200Response {
@@ -516,6 +541,40 @@ export const ChatApiAxiosParamCreator = function (configuration?: Configuration)
             };
         },
         /**
+         * Get chat
+         * @summary Get chat
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ChatsIdGet: async (id: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('v1ChatsIdGet', 'id', id)
+            const localVarPath = `/v1/chats/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Create chat message
          * @summary Create chat message
          * @param {string} id 
@@ -623,6 +682,17 @@ export const ChatApiFp = function(configuration?: Configuration) {
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
+         * Get chat
+         * @summary Get chat
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1ChatsIdGet(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<V1ChatsIdGet200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1ChatsIdGet(id, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
          * Create chat message
          * @summary Create chat message
          * @param {string} id 
@@ -675,6 +745,16 @@ export const ChatApiFactory = function (configuration?: Configuration, basePath?
             return localVarFp.v1ChatsIdDelete(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
+         * Get chat
+         * @summary Get chat
+         * @param {ChatApiV1ChatsIdGetRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ChatsIdGet(requestParameters: ChatApiV1ChatsIdGetRequest, options?: AxiosRequestConfig): AxiosPromise<V1ChatsIdGet200Response> {
+            return localVarFp.v1ChatsIdGet(requestParameters.id, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Create chat message
          * @summary Create chat message
          * @param {ChatApiV1ChatsIdMessagePostRequest} requestParameters Request parameters.
@@ -707,6 +787,20 @@ export interface ChatApiV1ChatsIdDeleteRequest {
      * 
      * @type {string}
      * @memberof ChatApiV1ChatsIdDelete
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for v1ChatsIdGet operation in ChatApi.
+ * @export
+ * @interface ChatApiV1ChatsIdGetRequest
+ */
+export interface ChatApiV1ChatsIdGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ChatApiV1ChatsIdGet
      */
     readonly id: string
 }
@@ -774,6 +868,18 @@ export class ChatApi extends BaseAPI {
      */
     public v1ChatsIdDelete(requestParameters: ChatApiV1ChatsIdDeleteRequest, options?: AxiosRequestConfig) {
         return ChatApiFp(this.configuration).v1ChatsIdDelete(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Get chat
+     * @summary Get chat
+     * @param {ChatApiV1ChatsIdGetRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ChatApi
+     */
+    public v1ChatsIdGet(requestParameters: ChatApiV1ChatsIdGetRequest, options?: AxiosRequestConfig) {
+        return ChatApiFp(this.configuration).v1ChatsIdGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

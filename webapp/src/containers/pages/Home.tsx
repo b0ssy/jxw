@@ -32,6 +32,8 @@ import { useBackend } from "../../lib/backend";
 
 export type Chat = V1ChatsGet200ResponseData["data"][0];
 
+export const POLL_ACTIVE_CHAT_MILLISECONDS = 2000;
+
 export default function Home() {
   // const themeMode = useSelector((state) => state.app.themeMode);
   const dispatch = useDispatch();
@@ -67,6 +69,48 @@ export default function Home() {
         }
       });
   }, [backend, refreshChats]);
+
+  // Check for updates to active chat
+  //
+  // Use stupid polling method for now
+  // I know this is ugly, but bear with me for a moment
+  // If needed, will migrate to use of websockets for push updates
+  useEffect(() => {
+    if (!activeChat || activeChat.status !== "running") {
+      return;
+    }
+
+    const timer = setInterval(async () => {
+      const res = await backend
+        .createChatApi()
+        .v1ChatsIdGet({ id: activeChat._id })
+        .catch(() => null);
+      if (!res) {
+        return;
+      }
+
+      // Update active chat
+      setActiveChat((chat) =>
+        chat?._id === res.data.data._id ? res.data.data : chat
+      );
+
+      // Update chats
+      setChats((chats) => {
+        if (chats) {
+          for (let i = 0; i < chats.data.length; i++) {
+            if (chats.data[i]._id === res.data.data._id) {
+              chats.data[i] = res.data.data;
+            }
+          }
+        }
+        return chats;
+      });
+    }, POLL_ACTIVE_CHAT_MILLISECONDS);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [backend, activeChat]);
 
   function newChat() {
     setMessage("");
@@ -275,6 +319,7 @@ export default function Home() {
 
         <Flex gap="2" style={{ marginBottom: "8px" }}>
           {/* Theme */}
+          {/* Disabled for now: don't want to waste time fine-tuning colors */}
           {/* <IconButton variant="surface" size="3" onClick={toggleTheme}>
             {themeMode === "light" && <SunIcon />}
             {themeMode === "dark" && <MoonIcon />}

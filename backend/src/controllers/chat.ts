@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+import { ObjectId, WithId } from "mongodb";
 
 import db, { Chat } from "../data/db";
 import chatgpt from "../data/chatgpt";
@@ -60,15 +60,24 @@ export class ChatController extends Controller {
       throw new InternalServerError();
     }
 
-    return {
-      ...chat,
+    return this.postprocessChat(chat);
+  }
 
-      // Convert to string
-      _id: chat._id.toHexString(),
+  // Get one chat
+  async get(chatId: string) {
+    // Ensure valid user
+    const userId = this.session.getUserIdOrThrow();
 
-      // Filter away system messages
-      messages: chat.messages.filter((message) => message.role !== "system"),
-    };
+    // Get the inserted doc
+    const chat = await db.chats.findOne({
+      _id: new ObjectId(chatId),
+      userId,
+    });
+    if (!chat) {
+      throw new InternalServerError();
+    }
+
+    return this.postprocessChat(chat);
   }
 
   // List all chats
@@ -83,15 +92,7 @@ export class ChatController extends Controller {
       .toArray();
 
     return {
-      data: chats.map((chat) => ({
-        ...chat,
-
-        // Convert to string
-        _id: chat._id.toHexString(),
-
-        // Filter away system messages
-        messages: chat.messages.filter((message) => message.role !== "system"),
-      })),
+      data: chats.map((chat) => this.postprocessChat(chat)),
       count: chats.length,
     };
   }
@@ -145,15 +146,7 @@ export class ChatController extends Controller {
       throw new InternalServerError();
     }
 
-    return {
-      ...chat,
-
-      // Convert to string
-      _id: chat._id.toHexString(),
-
-      // Filter away system messages
-      messages: chat.messages.filter((message) => message.role !== "system"),
-    };
+    return this.postprocessChat(chat);
   }
 
   // Delete chat
@@ -230,5 +223,20 @@ export class ChatController extends Controller {
     }
 
     // TODO: Push to client
+  }
+
+  // Post process chat document
+  // - Covnert _id to hex string
+  // - Remove system messages
+  postprocessChat(chat: WithId<Chat>) {
+    return {
+      ...chat,
+
+      // Convert to string
+      _id: chat._id.toHexString(),
+
+      // Filter away system messages
+      messages: chat.messages.filter((message) => message.role !== "system"),
+    };
   }
 }
