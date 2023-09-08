@@ -17,7 +17,7 @@ export const isSystemDarkMode = () => {
   );
 };
 
-const updateThemeMode = (themeMode: State["themeMode"]) => {
+const updateThemeMode = (/**themeMode: State["themeMode"] */) => {
   // if (themeMode === "dark") {
   //   document.documentElement.classList.add("dark");
   // } else {
@@ -49,10 +49,10 @@ const reducer = (
       if (action.payload && action.payload.app) {
         state = zState.parse(action.payload.app);
       }
-      updateThemeMode(state.themeMode);
+      updateThemeMode(/**state.themeMode */);
       return { ...state };
     case "app/SET_THEME_MODE": {
-      updateThemeMode(action.themeMode);
+      updateThemeMode(/**action.themeMode */);
       return { ...state, themeMode: action.themeMode };
     }
     case "app/SET_EMAIL": {
