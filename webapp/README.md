@@ -1,27 +1,35 @@
-# React + TypeScript + Vite
+# webapp
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Hello! This is a simple ChatGPT webapp application.
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- NodeJS >= v18.17.1
+- npm >= 9.6.7
 
-## Expanding the ESLint configuration
+## Setup
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
+```bash
+# Install node modules
+npm i
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## Development
+
+Please create **.env.development** environment file in the root directory with the following variables:
+- VITE_PROXY_BACKEND=http://127.0.0.1:8080
+
+```bash
+# Run dev server
+npm run dev
+```
+
+## Deployment
+
+Please create **.env** environment file in the root directory with the following variables:
+- VITE_PROXY_BACKEND=<production_backend_url>
+
+```bash
+# Build to "dist" folder
+npm run build
+```
