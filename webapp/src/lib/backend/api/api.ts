@@ -181,6 +181,12 @@ export interface V1ChatsPost200ResponseData {
     'userId': string;
     /**
      * 
+     * @type {string}
+     * @memberof V1ChatsPost200ResponseData
+     */
+    'status': V1ChatsPost200ResponseDataStatusEnum;
+    /**
+     * 
      * @type {Array<V1ChatsPost200ResponseDataMessagesInner>}
      * @memberof V1ChatsPost200ResponseData
      */
@@ -192,12 +198,26 @@ export interface V1ChatsPost200ResponseData {
      */
     '_id': string;
 }
+
+export const V1ChatsPost200ResponseDataStatusEnum = {
+    Idle: 'idle',
+    Running: 'running'
+} as const;
+
+export type V1ChatsPost200ResponseDataStatusEnum = typeof V1ChatsPost200ResponseDataStatusEnum[keyof typeof V1ChatsPost200ResponseDataStatusEnum];
+
 /**
  * 
  * @export
  * @interface V1ChatsPost200ResponseDataMessagesInner
  */
 export interface V1ChatsPost200ResponseDataMessagesInner {
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsPost200ResponseDataMessagesInner
+     */
+    'date': string;
     /**
      * 
      * @type {string}
