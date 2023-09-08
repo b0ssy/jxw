@@ -5,8 +5,11 @@
     "@types/fs-extra": "^11.0.1",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.5.9",
+    "@typescript-eslint/eslint-plugin": "^6.6.0",
+    "@typescript-eslint/parser": "^6.6.0",
     "cors": "^2.8.5",
     "dotenv-cli": "^7.3.0",
+    "eslint": "^8.48.0",
     "typescript": "^5.2.2"
   },
   "dependencies": {
@@ -31,6 +34,7 @@
     "init": "node build init",
     "start": "dotenv -e .env node build run",
     "openapi": "dotenv -e .env node build openapi -d openapi",
+    "lint": "eslint --ext .ts .",
     "test": "dotenv -e .env.test jest -- --silent=false --runInBand"
   }
 }
