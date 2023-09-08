@@ -309,6 +309,9 @@ export default function Home() {
               }}
             >
               {activeChat?.messages.map((message, index) => {
+                if (message.role !== "assistant" && message.role !== "user") {
+                  return null;
+                }
                 return (
                   <Flex
                     key={index}
