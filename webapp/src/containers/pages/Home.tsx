@@ -17,6 +17,7 @@ import {
   ChatBubbleIcon,
   TrashIcon,
   PaperPlaneIcon,
+  ArrowDownIcon,
   PersonIcon,
   CaretUpIcon,
   GitHubLogoIcon,
@@ -495,7 +496,7 @@ export default function Home() {
             )}
 
             {/* Empty message placeholder */}
-            {!activeChat?.messages.length && (
+            {chats && !activeChat?.messages.length && (
               <Flex
                 direction="column"
                 align="center"
@@ -505,7 +506,7 @@ export default function Home() {
                   height: "100%",
                 }}
               >
-                <PaperPlaneIcon width="72px" height="72px" color="gray" />
+                <ArrowDownIcon width="72px" height="72px" color="gray" />
                 <Text size="4" color="gray">
                   Start chatting with our digital marketing advisor!
                 </Text>

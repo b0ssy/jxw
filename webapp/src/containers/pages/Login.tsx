@@ -151,7 +151,6 @@ export default function Login() {
             {err.password}
           </Text>
         )}
-        <Box height="4" />
 
         {/* Login error */}
         {!!err.login && (
@@ -159,6 +158,7 @@ export default function Login() {
             {err.login}
           </Text>
         )}
+        <Box height="4" />
 
         {/* Login button */}
         <Box height="6" />
