@@ -255,11 +255,11 @@ export default function Home() {
               </Card>
             );
           })}
-          {!chats?.data.length && (
+          {chats && !chats.data.length && (
             <>
               <ChatBubbleIcon width="72px" height="72px" color="gray" />
               <div style={{ height: "16px" }} />
-              <Text color="gray">You have no chat history</Text>
+              <Text color="gray">You have no chats yet</Text>
             </>
           )}
         </Flex>
