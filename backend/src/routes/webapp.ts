@@ -7,5 +7,6 @@ const router = Router();
 
 // Serve webapp
 router.use("/", express.static(ENV.WEBAPP_BUILD_DIR));
+router.use("/login", express.static(ENV.WEBAPP_BUILD_DIR));
 
 export default router;

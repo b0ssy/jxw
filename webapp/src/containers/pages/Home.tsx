@@ -120,6 +120,9 @@ export default function Home() {
             behavior: "smooth",
           });
         }
+
+        // Focus on message box
+        messageInputRef.current?.focus();
       }, 100);
     }
 
