@@ -263,8 +263,10 @@ export default function Home() {
               width="100%"
               align="center"
               style={{
-                width: "768px",
+                width: "calc(768px + 32px)",
                 height: "150px",
+                marginLeft: "-16px",
+                marginRight: "-16px",
                 bottom: "0",
                 backgroundColor: grayDark.gray1,
                 filter: "blur(12px)",
