@@ -30,6 +30,7 @@ import { /**useSelector, */ useDispatch } from "../../redux/store";
 import "./Home.css";
 import { V1ChatsGet200ResponseData } from "../../lib/backend/api";
 import { useBackend } from "../../lib/backend";
+import ChatBubble from "../../components/ChatBubble";
 
 export type Chat = V1ChatsGet200ResponseData["data"][0];
 
@@ -491,6 +492,7 @@ export default function Home() {
                     );
                   })}
                 </div>
+                {activeChat?.status === "running" && <ChatBubble />}
                 <div style={{ height: "200px" }} />
               </>
             )}
@@ -506,10 +508,10 @@ export default function Home() {
                   height: "100%",
                 }}
               >
-                <ArrowDownIcon width="72px" height="72px" color="gray" />
                 <Text size="4" color="gray">
                   Start chatting with our digital marketing advisor!
                 </Text>
+                <ArrowDownIcon width="72px" height="72px" color="gray" />
               </Flex>
             )}
 

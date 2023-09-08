@@ -10,6 +10,7 @@ import {
 } from "@radix-ui/themes";
 import { EnterIcon } from "@radix-ui/react-icons";
 
+import Spinner from "../../components/Spinner";
 import { sleepFn1000ms, isValidEmail } from "../../lib/utils";
 import { useSelector, useDispatch } from "../../redux/store";
 import { useBackend } from "../../lib/backend";
@@ -74,7 +75,7 @@ export default function Login() {
       <Card
         style={{
           width: "400px",
-          padding: "36px 24px",
+          padding: "36px 24px 0 24px",
         }}
       >
         <Heading>Login to your account</Heading>
@@ -171,6 +172,14 @@ export default function Login() {
           Login
           <EnterIcon />
         </Button>
+
+        <Flex
+          align="center"
+          justify="center"
+          style={{ visibility: !loading ? "hidden" : undefined }}
+        >
+          <Spinner />
+        </Flex>
       </Card>
     </Flex>
   );
