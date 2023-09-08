@@ -87,9 +87,14 @@ export default function Home() {
 
     setMessage("");
 
+    // Scroll to bottom
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
+    }
+
     // Create new chat
     if (!activeChat) {
-      // Get chat message and set active chat
+      // Get chat message and set as active chat
       const res = await backend
         .createChatApi()
         .v1ChatsPost({ v1ChatsPostRequestBody: { message } });
@@ -325,61 +330,91 @@ export default function Home() {
             }}
           >
             {/* Messages */}
-            <div
-              style={{
-                padding: "0 16px",
-              }}
-            >
-              {activeChat?.messages.map((message, index) => {
-                if (message.role !== "assistant" && message.role !== "user") {
-                  return null;
-                }
-                const now = moment();
-                const date = moment(message.date);
-                const dateStr = `${
-                  // today
-                  +now.clone().startOf("day") === +date.clone().startOf("day")
-                    ? " "
-                    : // yesterday
-                    +now.clone().subtract(1, "day").startOf("day") ===
+            {activeChat?.messages.length && (
+              <>
+                <div
+                  style={{
+                    padding: "0 16px",
+                  }}
+                >
+                  {activeChat?.messages.map((message, index) => {
+                    if (
+                      message.role !== "assistant" &&
+                      message.role !== "user"
+                    ) {
+                      return null;
+                    }
+                    const now = moment();
+                    const date = moment(message.date);
+                    const dateStr = `${
+                      // today
+                      +now.clone().startOf("day") ===
                       +date.clone().startOf("day")
-                    ? "yesterday, "
-                    : `${date.format("D MMM YY")}, `
-                }${date.format("h:mm a")}`;
-                return (
-                  <Flex
-                    key={index}
-                    justify={message.role === "assistant" ? "start" : "end"}
-                  >
-                    <Card
-                      my="2"
-                      style={{
-                        backgroundColor:
-                          message.role === "assistant"
-                            ? tealDark.teal4
-                            : irisDark.iris4,
-                      }}
-                    >
-                      <Flex direction="column" align="end">
-                        {message.content.split("\n").map((sentence, index) => (
-                          <div key={index}>{sentence}</div>
-                        ))}
-                      </Flex>
-                      <div style={{ height: "4px" }} />
+                        ? " "
+                        : // yesterday
+                        +now.clone().subtract(1, "day").startOf("day") ===
+                          +date.clone().startOf("day")
+                        ? "yesterday, "
+                        : `${date.format("D MMM YY")}, `
+                    }${date.format("h:mm a")}`;
+                    return (
                       <Flex
-                        direction="column"
-                        align={message.role === "assistant" ? "start" : "end"}
+                        key={index}
+                        justify={message.role === "assistant" ? "start" : "end"}
                       >
-                        <Text size="1" color="gray">
-                          {dateStr}
-                        </Text>
+                        <Card
+                          my="2"
+                          style={{
+                            backgroundColor:
+                              message.role === "assistant"
+                                ? tealDark.teal4
+                                : irisDark.iris4,
+                          }}
+                        >
+                          <Flex direction="column" align="end">
+                            {message.content
+                              .split("\n")
+                              .map((sentence, index) => (
+                                <div key={index}>{sentence}</div>
+                              ))}
+                          </Flex>
+                          <div style={{ height: "4px" }} />
+                          <Flex
+                            direction="column"
+                            align={
+                              message.role === "assistant" ? "start" : "end"
+                            }
+                          >
+                            <Text size="1" color="gray">
+                              {dateStr}
+                            </Text>
+                          </Flex>
+                        </Card>
                       </Flex>
-                    </Card>
-                  </Flex>
-                );
-              })}
-            </div>
-            <div style={{ height: "200px" }} />
+                    );
+                  })}
+                </div>
+                <div style={{ height: "200px" }} />
+              </>
+            )}
+
+            {/* Empty message placeholder */}
+            {!activeChat?.messages.length && (
+              <Flex
+                direction="column"
+                align="center"
+                justify="center"
+                gap="4"
+                style={{
+                  height: "100%",
+                }}
+              >
+                <PaperPlaneIcon width="72px" height="72px" color="gray" />
+                <Text size="4" color="gray">
+                  Start chatting with our digital marketing advisor!
+                </Text>
+              </Flex>
+            )}
 
             {/* Message box */}
             <Flex
