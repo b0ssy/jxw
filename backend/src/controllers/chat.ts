@@ -59,6 +59,7 @@ export class ChatController extends Controller {
       createdAt: now,
       updatedAt: now,
       userId,
+      status: "idle",
       messages,
     });
 
