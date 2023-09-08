@@ -3,7 +3,10 @@ import { ObjectId, WithId } from "mongodb";
 import db, { Chat } from "../data/db";
 import chatgpt from "../data/chatgpt";
 import { Controller } from "../data/api";
+import { Logger } from "../helpers/logger";
 import { BadRequestError, InternalServerError } from "../errors";
+
+const LOG = new Logger("controllers/chat");
 
 const SYSTEM_PROMPT = `
 From now on, you will assume the role of a professional digital marketing advisor under the company called JXW Asia.
@@ -185,12 +188,36 @@ export class ChatController extends Controller {
     }
 
     // Call chat completion
-    const result = await chatgpt.chatComplete(
-      chat.messages.map((message) => ({
-        role: message.role,
-        content: message.content,
-      }))
-    );
+    const result = await chatgpt
+      .chatComplete(
+        chat.messages.map((message) => ({
+          role: message.role,
+          content: message.content,
+        }))
+      )
+      .catch((err) => {
+        LOG.error("ChatGPT chat completion error", {
+          message: err?.message ?? "",
+          stack: err?.stack ?? "",
+        });
+      });
+    // Error occured, update status back to idle
+    if (!result) {
+      await db.chats.updateOne(
+        {
+          _id: chat._id,
+          userId,
+        },
+        {
+          $set: {
+            updatedAt: new Date(),
+            status: "idle",
+          },
+        }
+      );
+      return;
+    }
+
     const resultMessage: Chat["messages"][0] = {
       date: new Date(result.created * 1000),
       role: result.choices.length
