@@ -14,9 +14,6 @@ const LOG = new Logger("data/session");
 
 export const zJWTPayload = z.object({
   userId: z.string(),
-  type: z.string().optional(),
-  roleNames: z.string().array().optional(),
-  attributes: z.record(z.string(), z.string().optional()).optional(),
 });
 export type JWTPayload = z.infer<typeof zJWTPayload>;
 
@@ -98,7 +95,7 @@ export const decode = <
   TBody extends z.AnyZodObject,
   TQuery extends z.AnyZodObject,
   TParams extends z.AnyZodObject,
-  THeaders extends z.AnyZodObject,
+  THeaders extends z.AnyZodObject
 >(
   req: Request,
   res: Response,
@@ -205,11 +202,7 @@ export const decodeJWTPayload = (accessToken: string): JWTPayload => {
 
 // Authorize user
 export const authorize =
-  (options: {
-    userType?: "";
-    roleNames?: string[];
-    onCheckSession?: (session: Session) => void;
-  }) =>
+  (options: { onCheckSession?: (session: Session) => void }) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // decodeSession() should already be called before
@@ -218,24 +211,7 @@ export const authorize =
       }
       const session: Session = res.locals["session"];
 
-      const { userType, roleNames, onCheckSession } = options;
-
-      // Check user type
-      if (userType) {
-        if (session.jwtPayload?.type !== userType) {
-          throw new NotAuthorizedError();
-        }
-      }
-
-      // Check role names
-      if (roleNames) {
-        const requiredRoles = session.jwtPayload?.roleNames?.filter(
-          (roleName) => roleNames.includes(roleName)
-        );
-        if (!requiredRoles || requiredRoles.length <= 0) {
-          throw new NotAuthorizedError();
-        }
-      }
+      const { onCheckSession } = options;
 
       // Custom callback to check session
       if (onCheckSession) {
