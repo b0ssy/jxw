@@ -29,18 +29,22 @@ export class ChatController extends Controller {
     //
     // For first message, we will interject a system message to request
     // ChatGPT to reply NO if message is not related to marketing
+    const now = new Date();
     const messages: Chat["messages"] = [
       {
+        date: now,
         role: "user",
         content: message,
       },
       {
+        date: now,
         role: "system",
         content: SYSTEM_PROMPT,
       },
     ];
     const result = await chatgpt.chatComplete(messages);
     messages.push({
+      date: new Date(result.created * 1000),
       role: result.choices.length
         ? result.choices[0].message.role
         : "assistant",
@@ -51,7 +55,6 @@ export class ChatController extends Controller {
     });
 
     // Insert doc
-    const now = new Date();
     const { insertedId } = await db.chats.insertOne({
       createdAt: now,
       updatedAt: now,
@@ -128,15 +131,18 @@ export class ChatController extends Controller {
 
     // Call chat completion
     const messages = chat.messages.map((message) => ({
+      date: message.date,
       role: message.role,
       content: message.content,
     }));
     messages.push({
+      date: new Date(),
       role: "user",
       content: message,
     });
     const result = await chatgpt.chatComplete(messages);
     const resultMessage: Chat["messages"][0] = {
+      date: new Date(result.created * 1000),
       role: result.choices.length
         ? result.choices[0].message.role
         : "assistant",
@@ -147,7 +153,6 @@ export class ChatController extends Controller {
     };
 
     // Update doc
-    const now = new Date();
     const updateResult = await db.chats.updateOne(
       {
         _id: chat._id,
@@ -155,7 +160,7 @@ export class ChatController extends Controller {
       },
       {
         $set: {
-          updatedAt: now,
+          updatedAt: new Date(),
         },
         $push: {
           messages: {

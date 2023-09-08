@@ -22,6 +22,7 @@ export const zChat = z.object({
   userId: z.string(),
   messages: z
     .object({
+      date: z.date(),
       role: z.enum(["user", "assistant", "system", "function"]),
       content: z.string(),
       result: z.any().nullish(),
