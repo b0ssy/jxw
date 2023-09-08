@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Flex,
+  Card,
   Button,
   IconButton,
   DropdownMenu,
@@ -9,7 +10,6 @@ import {
 } from "@radix-ui/themes";
 import {
   PlusIcon,
-  ChatBubbleIcon,
   // SunIcon,
   // MoonIcon,
   PaperPlaneIcon,
@@ -43,7 +43,11 @@ export default function Home() {
       .createChatApi()
       .v1ChatsGet()
       .then((res) => {
+        // Chats should be already sorted by created date in descending order
         setChats(res.data.data);
+        if (res.data.data.data.length) {
+          setActiveChat(res.data.data.data[0]);
+        }
       });
   }, []);
 
@@ -74,7 +78,6 @@ export default function Home() {
       id: activeChat._id,
       v1ChatsIdMessagePostRequestBody: { message },
     });
-    console.log(res);
     setActiveChat(res.data.data);
   }
 
@@ -128,17 +131,28 @@ export default function Home() {
 
         {/* Chats */}
         <Flex direction="column" grow="1" my="2" style={{ overflowY: "auto" }}>
-          {chats?.data.map((chat, index) => {
+          {chats?.data.map((chat) => {
             return (
-              <Flex
-                key={index}
-                className="chat-message"
-                p="2"
-                align="center"
-                gap="2"
+              <Card
+                key={chat._id}
+                variant={activeChat?._id === chat._id ? "surface" : "ghost"}
+                title={
+                  chat.messages.length
+                    ? chat.messages[0].content
+                    : "No message available"
+                }
+                style={{
+                  margin: "4px 0",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  setActiveChat(chat);
+                }}
               >
-                <ChatBubbleIcon width="24px" />
                 <Text
+                  as="div"
+                  size="2"
+                  weight={activeChat?._id === chat._id ? "bold" : undefined}
                   style={{
                     width: "calc(100% - 24px)",
                     whiteSpace: "nowrap",
@@ -146,9 +160,11 @@ export default function Home() {
                     textOverflow: "ellipsis",
                   }}
                 >
-                  {chat.messages.length ? chat.messages[0].content : "No data"}
+                  {chat.messages.length
+                    ? chat.messages[0].content
+                    : "No message available"}
                 </Text>
-              </Flex>
+              </Card>
             );
           })}
           {!chats?.data.length && <Text>No chat history</Text>}
@@ -224,7 +240,11 @@ export default function Home() {
                   py="2"
                   justify={message.role === "assistant" ? "start" : "end"}
                 >
-                  <div>{message.content}</div>
+                  <Flex direction="column">
+                    {message.content.split("\n").map((sentence, index) => (
+                      <div key={index}>{sentence}</div>
+                    ))}
+                  </Flex>
                 </Flex>
               );
             })}

@@ -5,6 +5,12 @@ import chatgpt from "../data/chatgpt";
 import { Controller } from "../data/api";
 import { BadRequestError, InternalServerError } from "../errors";
 
+const SYSTEM_PROMPT = `
+From now on, you will assume the role of a professional digital marketing advisor under the company called JXW Asia.
+You will only discuss about marketing related questions.
+Please do not entertain non-marketing related questions.
+`;
+
 export class ChatController extends Controller {
   // Create a new chats
   async create(message: string) {
@@ -30,8 +36,7 @@ export class ChatController extends Controller {
       },
       {
         role: "system",
-        content:
-          "From now on, you must assume the role of a professional digital marketing advisor. You will only discuss about marketing related questions. Please do not entertain other non-marketing related questions.",
+        content: SYSTEM_PROMPT,
       },
     ];
     const result = await chatgpt.chatComplete(messages);
@@ -77,7 +82,10 @@ export class ChatController extends Controller {
     const userId = this.session.getUserIdOrThrow();
 
     // Get all chats
-    const chats = await db.chats.find({ userId }).toArray();
+    const chats = await db.chats
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .toArray();
 
     return {
       data: chats.map((chat) => ({
