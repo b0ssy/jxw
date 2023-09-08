@@ -32,7 +32,7 @@ import { useBackend } from "../../lib/backend";
 
 export type Chat = V1ChatsGet200ResponseData["data"][0];
 
-export const POLL_ACTIVE_CHAT_MILLISECONDS = 2000;
+export const POLL_ACTIVE_CHAT_MILLISECONDS = 1000;
 
 export default function Home() {
   // const themeMode = useSelector((state) => state.app.themeMode);
@@ -46,6 +46,9 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [chats, setChats] = useState<V1ChatsGet200ResponseData | null>(null);
+
+  const activeChatId = activeChat?._id;
+  const activeChatStatus = activeChat?.status;
 
   // Query for chats
   useEffect(() => {
@@ -76,14 +79,14 @@ export default function Home() {
   // I know this is ugly, but bear with me for a moment
   // If needed, will migrate to use of websockets for push updates
   useEffect(() => {
-    if (!activeChat || activeChat.status !== "running") {
+    if (!activeChatId || activeChatStatus !== "running") {
       return;
     }
 
-    const timer = setInterval(async () => {
+    async function getLatestChat(id: string) {
       const res = await backend
         .createChatApi()
-        .v1ChatsIdGet({ id: activeChat._id })
+        .v1ChatsIdGet({ id })
         .catch(() => null);
       if (!res) {
         return;
@@ -105,12 +108,29 @@ export default function Home() {
         }
         return chats;
       });
+
+      // Scroll to bottom once completed
+      // Trigger a while later to ensure message is rendered
+      setTimeout(() => {
+        if (res.data.data.status === "idle" && chatWindowRef.current) {
+          chatWindowRef.current.scrollBy({
+            top: chatWindowRef.current.scrollHeight,
+            behavior: "smooth",
+          });
+        }
+      }, 100);
+    }
+
+    const timer = setInterval(() => {
+      getLatestChat(activeChatId);
     }, POLL_ACTIVE_CHAT_MILLISECONDS);
+
+    getLatestChat(activeChatId);
 
     return () => {
       clearInterval(timer);
     };
-  }, [backend, activeChat]);
+  }, [backend, activeChatId, activeChatStatus]);
 
   function newChat() {
     setMessage("");
@@ -141,9 +161,15 @@ export default function Home() {
     setMessage("");
 
     // Scroll to bottom
-    if (chatWindowRef.current) {
-      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
-    }
+    // Trigger a while later to ensure message is rendered
+    setTimeout(() => {
+      if (chatWindowRef.current) {
+        chatWindowRef.current.scrollBy({
+          top: chatWindowRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
 
     // Create new chat
     if (!activeChat) {
