@@ -14,6 +14,7 @@ import {
   PlusIcon,
   // SunIcon,
   // MoonIcon,
+  ChatBubbleIcon,
   TrashIcon,
   PaperPlaneIcon,
   PersonIcon,
@@ -21,7 +22,7 @@ import {
   GitHubLogoIcon,
   ExitIcon,
 } from "@radix-ui/react-icons";
-import { grayDark, tealDark, irisDark, teal } from "@radix-ui/colors";
+import { grayDark, tealDark, irisDark } from "@radix-ui/colors";
 
 import { /**useSelector, */ useDispatch } from "../../redux/store";
 import "./Home.css";
@@ -37,6 +38,7 @@ export default function Home() {
   const backend = useBackend();
 
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
+  const messageInputRef = useRef<HTMLInputElement | null>(null);
   const [refreshChats, setRefreshChats] = useState(Date.now());
   const [message, setMessage] = useState("");
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
@@ -59,6 +61,7 @@ export default function Home() {
   function newChat() {
     setMessage("");
     setActiveChat(null);
+    messageInputRef.current?.focus();
   }
 
   function selectChat(chat: Chat) {
@@ -100,6 +103,11 @@ export default function Home() {
   async function deleteChat(id: string) {
     await backend.createChatApi().v1ChatsIdDelete({ id });
     setRefreshChats(Date.now());
+
+    // Clear active chat
+    if (activeChat?._id === id) {
+      setActiveChat(null);
+    }
   }
 
   // function toggleTheme() {
@@ -153,6 +161,8 @@ export default function Home() {
         {/* Chats */}
         <Flex
           direction="column"
+          align={!chats?.data.length ? "center" : undefined}
+          justify={!chats?.data.length ? "center" : undefined}
           grow="1"
           my="2"
           style={{
@@ -234,7 +244,13 @@ export default function Home() {
               </Card>
             );
           })}
-          {!chats?.data.length && <Text>No chat history</Text>}
+          {!chats?.data.length && (
+            <>
+              <ChatBubbleIcon width="72px" height="72px" color="gray" />
+              <div style={{ height: "16px" }} />
+              <Text color="gray">You have no chat history</Text>
+            </>
+          )}
         </Flex>
 
         <Flex gap="2" style={{ marginBottom: "8px" }}>
@@ -369,6 +385,9 @@ export default function Home() {
             >
               <TextField.Root style={{ width: "100%" }}>
                 <TextField.Input
+                  ref={(ref) => {
+                    messageInputRef.current = ref;
+                  }}
                   size="3"
                   placeholder="Send a message"
                   value={message}
