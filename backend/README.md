@@ -15,6 +15,9 @@ Hello! This is a simple ChatGPT backend application.
 # Install node modules
 npm i
 
+# Compile TypeScript to JavaScript files
+npx tsc --build
+
 # Create default environment file
 # This will create a file called ".env" in the root directory
 npm run init
