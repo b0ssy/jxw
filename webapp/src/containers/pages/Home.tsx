@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Flex,
   Card,
@@ -8,8 +8,6 @@ import {
   DropdownMenu,
   Text,
   TextField,
-  Quote,
-  Blockquote,
   Em,
 } from "@radix-ui/themes";
 import {
@@ -23,12 +21,14 @@ import {
   GitHubLogoIcon,
   ExitIcon,
 } from "@radix-ui/react-icons";
-import { grayDark } from "@radix-ui/colors";
+import { grayDark, tealDark, irisDark, teal } from "@radix-ui/colors";
 
 import { /**useSelector, */ useDispatch } from "../../redux/store";
 import "./Home.css";
 import { V1ChatsGet200ResponseData } from "../../lib/backend/api";
 import { useBackend } from "../../lib/backend";
+
+export type Chat = V1ChatsGet200ResponseData["data"][0];
 
 export default function Home() {
   // const themeMode = useSelector((state) => state.app.themeMode);
@@ -36,11 +36,10 @@ export default function Home() {
 
   const backend = useBackend();
 
+  const chatWindowRef = useRef<HTMLDivElement | null>(null);
   const [refreshChats, setRefreshChats] = useState(Date.now());
   const [message, setMessage] = useState("");
-  const [activeChat, setActiveChat] = useState<
-    V1ChatsGet200ResponseData["data"][0] | null
-  >(null);
+  const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [chats, setChats] = useState<V1ChatsGet200ResponseData | null>(null);
 
   // Query for chats
@@ -60,6 +59,16 @@ export default function Home() {
   function newChat() {
     setMessage("");
     setActiveChat(null);
+  }
+
+  function selectChat(chat: Chat) {
+    setActiveChat(chat);
+
+    // Chat window might be scrolled to bottom previously
+    // So scroll it back to top here
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = 0;
+    }
   }
 
   async function sendMessage() {
@@ -142,7 +151,14 @@ export default function Home() {
         </div>
 
         {/* Chats */}
-        <Flex direction="column" grow="1" my="2" style={{ overflowY: "auto" }}>
+        <Flex
+          direction="column"
+          grow="1"
+          my="2"
+          style={{
+            overflowY: "auto",
+          }}
+        >
           {chats?.data.map((chat) => {
             const firstMessage = chat.messages.length
               ? chat.messages[0].content
@@ -156,9 +172,7 @@ export default function Home() {
                   margin: "2px 0",
                   cursor: "pointer",
                 }}
-                onClick={() => {
-                  setActiveChat(chat);
-                }}
+                onClick={() => selectChat(chat)}
               >
                 <Flex gap="2" align="center">
                   <Text
@@ -194,7 +208,7 @@ export default function Home() {
                         <Em>{firstMessage}</Em>
                         <br />
                         <br />
-                        Are you sure you want to delete the above chat?
+                        Are you sure you want to delete the chat above?
                       </AlertDialog.Description>
                       <Flex gap="3" mt="4" justify="end">
                         <AlertDialog.Cancel>
@@ -268,6 +282,9 @@ export default function Home() {
         }}
       >
         <div
+          ref={(ref) => {
+            chatWindowRef.current = ref;
+          }}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -295,14 +312,23 @@ export default function Home() {
                 return (
                   <Flex
                     key={index}
-                    py="2"
                     justify={message.role === "assistant" ? "start" : "end"}
                   >
-                    <Flex direction="column">
-                      {message.content.split("\n").map((sentence, index) => (
-                        <div key={index}>{sentence}</div>
-                      ))}
-                    </Flex>
+                    <Card
+                      my="2"
+                      style={{
+                        backgroundColor:
+                          message.role === "assistant"
+                            ? tealDark.teal4
+                            : irisDark.iris4,
+                      }}
+                    >
+                      <Flex direction="column">
+                        {message.content.split("\n").map((sentence, index) => (
+                          <div key={index}>{sentence}</div>
+                        ))}
+                      </Flex>
+                    </Card>
                   </Flex>
                 );
               })}
