@@ -4,14 +4,19 @@ import {
   Card,
   Button,
   IconButton,
+  AlertDialog,
   DropdownMenu,
   Text,
   TextField,
+  Quote,
+  Blockquote,
+  Em,
 } from "@radix-ui/themes";
 import {
   PlusIcon,
   // SunIcon,
   // MoonIcon,
+  TrashIcon,
   PaperPlaneIcon,
   PersonIcon,
   CaretUpIcon,
@@ -31,6 +36,7 @@ export default function Home() {
 
   const backend = useBackend();
 
+  const [refreshChats, setRefreshChats] = useState(Date.now());
   const [message, setMessage] = useState("");
   const [activeChat, setActiveChat] = useState<
     V1ChatsGet200ResponseData["data"][0] | null
@@ -49,7 +55,7 @@ export default function Home() {
           setActiveChat(res.data.data.data[0]);
         }
       });
-  }, []);
+  }, [backend, refreshChats]);
 
   function newChat() {
     setMessage("");
@@ -70,6 +76,7 @@ export default function Home() {
         .createChatApi()
         .v1ChatsPost({ v1ChatsPostRequestBody: { message } });
       setActiveChat(res.data.data);
+      setRefreshChats(Date.now());
       return;
     }
 
@@ -79,6 +86,11 @@ export default function Home() {
       v1ChatsIdMessagePostRequestBody: { message },
     });
     setActiveChat(res.data.data);
+  }
+
+  async function deleteChat(id: string) {
+    await backend.createChatApi().v1ChatsIdDelete({ id });
+    setRefreshChats(Date.now());
   }
 
   // function toggleTheme() {
@@ -132,38 +144,79 @@ export default function Home() {
         {/* Chats */}
         <Flex direction="column" grow="1" my="2" style={{ overflowY: "auto" }}>
           {chats?.data.map((chat) => {
+            const firstMessage = chat.messages.length
+              ? chat.messages[0].content
+              : "No message available";
             return (
               <Card
                 key={chat._id}
                 variant={activeChat?._id === chat._id ? "surface" : "ghost"}
-                title={
-                  chat.messages.length
-                    ? chat.messages[0].content
-                    : "No message available"
-                }
+                title={firstMessage}
                 style={{
-                  margin: "4px 0",
+                  margin: "2px 0",
                   cursor: "pointer",
                 }}
                 onClick={() => {
                   setActiveChat(chat);
                 }}
               >
-                <Text
-                  as="div"
-                  size="2"
-                  weight={activeChat?._id === chat._id ? "bold" : undefined}
-                  style={{
-                    width: "calc(100% - 24px)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {chat.messages.length
-                    ? chat.messages[0].content
-                    : "No message available"}
-                </Text>
+                <Flex gap="2" align="center">
+                  <Text
+                    as="div"
+                    size="2"
+                    weight={activeChat?._id === chat._id ? "bold" : undefined}
+                    style={{
+                      width: "calc(100% - 24px)",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {firstMessage}
+                  </Text>
+                  <AlertDialog.Root>
+                    <AlertDialog.Trigger>
+                      <IconButton
+                        variant="soft"
+                        color="red"
+                        size="1"
+                        style={{
+                          visibility:
+                            activeChat?._id !== chat._id ? "hidden" : undefined,
+                        }}
+                      >
+                        <TrashIcon />
+                      </IconButton>
+                    </AlertDialog.Trigger>
+                    <AlertDialog.Content style={{ maxWidth: 450 }}>
+                      <AlertDialog.Title>Delete Chat</AlertDialog.Title>
+                      <AlertDialog.Description size="2">
+                        <Em>{firstMessage}</Em>
+                        <br />
+                        <br />
+                        Are you sure you want to delete the above chat?
+                      </AlertDialog.Description>
+                      <Flex gap="3" mt="4" justify="end">
+                        <AlertDialog.Cancel>
+                          <Button variant="soft" color="gray">
+                            Cancel
+                          </Button>
+                        </AlertDialog.Cancel>
+                        <AlertDialog.Action>
+                          <Button
+                            variant="solid"
+                            color="red"
+                            onClick={() => {
+                              deleteChat(chat._id);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </AlertDialog.Action>
+                      </Flex>
+                    </AlertDialog.Content>
+                  </AlertDialog.Root>
+                </Flex>
               </Card>
             );
           })}
