@@ -42,7 +42,12 @@ export class ChatController extends Controller {
         content: SYSTEM_PROMPT,
       },
     ];
-    const result = await chatgpt.chatComplete(messages);
+    const result = await chatgpt.chatComplete(
+      messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      }))
+    );
     messages.push({
       date: new Date(result.created * 1000),
       role: result.choices.length
@@ -141,7 +146,12 @@ export class ChatController extends Controller {
       role: "user",
       content: message,
     });
-    const result = await chatgpt.chatComplete(messages);
+    const result = await chatgpt.chatComplete(
+      messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      }))
+    );
     const resultMessage: Chat["messages"][0] = {
       date: new Date(result.created * 1000),
       role: result.choices.length
