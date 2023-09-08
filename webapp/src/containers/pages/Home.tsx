@@ -416,7 +416,7 @@ export default function Home() {
               </Flex>
             )}
 
-            {/* Message box */}
+            {/* Blur effect */}
             <Flex
               position="fixed"
               grow="1"
@@ -432,6 +432,8 @@ export default function Home() {
                 filter: "blur(12px)",
               }}
             />
+
+            {/* Message box */}
             <Flex
               position="fixed"
               grow="1"
@@ -451,6 +453,7 @@ export default function Home() {
                     messageInputRef.current = ref;
                   }}
                   size="3"
+                  autoFocus
                   placeholder="Send a message"
                   value={message}
                   style={{
