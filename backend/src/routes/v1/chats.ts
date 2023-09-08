@@ -4,6 +4,7 @@ import { Routes } from "../../data";
 import { zChat } from "../../data/db";
 import { ChatController } from "../../controllers/chat";
 
+// Routes to manage chats
 const routes = new Routes({
   createController: () => new ChatController(),
 })

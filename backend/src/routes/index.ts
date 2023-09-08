@@ -18,7 +18,7 @@ export const mountRoutes = async (app: Express) => {
   // Chat routes
   app.use(v1chats);
 
-  // Serve webapp UI
+  // Serve webapp
   app.use(webapp);
 
   // Handle invalid pages

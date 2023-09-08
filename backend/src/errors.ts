@@ -1,3 +1,4 @@
+// Generic application error
 export class AppError extends Error {
   status: number;
   code: string;
@@ -20,6 +21,11 @@ export class BadRequestError extends AppError {
     super(400, code, message);
   }
 }
+export class UnsupportedOperationError extends BadRequestError {
+  constructor(message = "Operation is unsupported") {
+    super(message, "unsupported_operation");
+  }
+}
 
 // 401
 export class NotAuthorizedError extends AppError {
@@ -28,12 +34,6 @@ export class NotAuthorizedError extends AppError {
     code = "not_authorized"
   ) {
     super(401, code, message);
-  }
-}
-
-export class UnsupportedOperationError extends BadRequestError {
-  constructor(message = "Operation is unsupported") {
-    super(message, "unsupported_operation");
   }
 }
 
@@ -60,7 +60,6 @@ export class InternalServerError extends AppError {
     super(500, code, message);
   }
 }
-
 export class NotImplementedError extends InternalServerError {
   constructor(message = "Operation not implemented yet") {
     super(message, "not_implemented");

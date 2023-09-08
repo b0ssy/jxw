@@ -12,8 +12,12 @@ const LOG = new Logger("index");
 
 const program = new Command();
 
-program.name("backend").description("JWX backend service").version("0.1.0");
+// Top level CLI info
+program.name("backend");
+program.description("JWX backend service");
+program.version("0.1.0");
 
+// CLI commands
 program
   .command("init")
   .description("Initialize server configurations")

@@ -15,6 +15,9 @@ import {
 export class AuthController extends Controller {
   // Create new user account
   createUser = async (email: string, password: string) => {
+    email = email.trim();
+    password = password.trim();
+
     // Validate email
     if (!AuthController.isValidEmail(email)) {
       throw new BadRequestError("Please provide valid email", "invalid_email");
@@ -69,6 +72,9 @@ export class AuthController extends Controller {
 
   // Login to user account
   login = async (email: string, password: string) => {
+    email = email.trim();
+    password = password.trim();
+    
     // Validate email
     if (!AuthController.isValidEmail(email)) {
       throw new BadRequestError(

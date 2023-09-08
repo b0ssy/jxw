@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Routes } from "../../data";
 import { AuthController } from "../../controllers/auth";
 
+// Routes to manage user authentication
 const routes = new Routes({
   createController: () => new AuthController(),
 }).post("/v1/login", "Login account", {

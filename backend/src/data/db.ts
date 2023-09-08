@@ -48,6 +48,7 @@ export class Database {
 
   // Connect to database
   async connect() {
+    LOG.info("Connecting to MongoDB...");
     await this.client.connect();
     LOG.info("Connected to MongoDB successfully");
 
@@ -58,14 +59,19 @@ export class Database {
   // Create indexes
   async createIndexes() {
     // users
+    //
+    // Ensure email is unique
     await this.users.createIndex({ email: 1 }, { unique: true });
 
     // chats
+    //
+    // Needs to filter by both _id and userId to ensure user has access
     await this.chats.createIndex({ _id: 1, userId: 1 });
   }
 
   // Close database connection
   async close() {
+    LOG.info("Closing MongoDB connection...");
     await this.client.close();
     LOG.info("Closed MongoDB connection successfully");
   }

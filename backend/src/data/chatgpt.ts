@@ -2,6 +2,7 @@ import OpenAI from "openai";
 
 import { ENV } from "../config";
 
+// Default GPT model to use
 const MODEL = "gpt-3.5-turbo";
 
 export type ChatGPTMessage = {
@@ -13,6 +14,7 @@ export type ChatGPTOptions = {
   apiKey: string;
 };
 
+// A simple wrapper over OpenAI chat API
 export class ChatGPT {
   openai: OpenAI;
 
