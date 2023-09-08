@@ -10,8 +10,8 @@ const LOG = new Logger("data/db");
 export const zUser = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
-  email: z.string().optional(),
-  passwordHash: z.string().optional(),
+  email: z.string().nullish(),
+  passwordHash: z.string().nullish(),
 });
 export type User = z.infer<typeof zUser>;
 
@@ -24,7 +24,7 @@ export const zChat = z.object({
     .object({
       role: z.enum(["user", "assistant", "system", "function"]),
       content: z.string(),
-      result: z.any().optional(),
+      result: z.any().nullish(),
     })
     .array(),
 });
