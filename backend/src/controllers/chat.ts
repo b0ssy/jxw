@@ -12,10 +12,11 @@ Please do not entertain non-marketing related questions.
 `;
 
 export class ChatController extends Controller {
-  // Create a new chats
+  // Create a new chat
   async create(message: string) {
     // Ensure valid message
-    if (!message.trim()) {
+    message = message.trim();
+    if (!message) {
       throw new BadRequestError(
         "Please provide a valid message",
         "invalid_message"
@@ -25,10 +26,8 @@ export class ChatController extends Controller {
     // Ensure valid user
     const userId = this.session.getUserIdOrThrow();
 
-    // Call chat completion
-    //
     // For first message, we will interject a system message to request
-    // ChatGPT to reply NO if message is not related to marketing
+    // ChatGPT to only talk about marketing related conversations
     const now = new Date();
     const messages: Chat["messages"] = [
       {
@@ -42,31 +41,18 @@ export class ChatController extends Controller {
         content: SYSTEM_PROMPT,
       },
     ];
-    const result = await chatgpt.chatComplete(
-      messages.map((message) => ({
-        role: message.role,
-        content: message.content,
-      }))
-    );
-    messages.push({
-      date: new Date(result.created * 1000),
-      role: result.choices.length
-        ? result.choices[0].message.role
-        : "assistant",
-      content: result.choices.length
-        ? result.choices[0].message.content || ""
-        : "",
-      result,
-    });
 
     // Insert doc
     const { insertedId } = await db.chats.insertOne({
       createdAt: now,
       updatedAt: now,
       userId,
-      status: "idle",
+      status: "running",
       messages,
     });
+
+    // Call ChatGPT in the background
+    this._callChatGPT(insertedId.toHexString());
 
     // Get the inserted doc
     const chat = await db.chats.findOne({ _id: insertedId });
@@ -113,7 +99,8 @@ export class ChatController extends Controller {
   // Update chat with new message
   async update(chatId: string, message: string) {
     // Ensure valid message
-    if (!message.trim()) {
+    message = message.trim();
+    if (!message) {
       throw new BadRequestError(
         "Please provide a valid message",
         "invalid_message"
@@ -123,69 +110,37 @@ export class ChatController extends Controller {
     // Ensure valid user
     const userId = this.session.getUserIdOrThrow();
 
-    // Ensure valid chat id
-    let chat = await db.chats.findOne({
-      _id: new ObjectId(chatId),
-      userId,
-    });
-    if (!chat) {
-      throw new BadRequestError(
-        "Please provide a valid chat id",
-        "invalid_chat_id"
-      );
-    }
-
-    // Call chat completion
-    const messages = chat.messages.map((message) => ({
-      date: message.date,
-      role: message.role,
-      content: message.content,
-    }));
-    messages.push({
-      date: new Date(),
-      role: "user",
-      content: message,
-    });
-    const result = await chatgpt.chatComplete(
-      messages.map((message) => ({
-        role: message.role,
-        content: message.content,
-      }))
-    );
-    const resultMessage: Chat["messages"][0] = {
-      date: new Date(result.created * 1000),
-      role: result.choices.length
-        ? result.choices[0].message.role
-        : "assistant",
-      content: result.choices.length
-        ? result.choices[0].message.content || ""
-        : "",
-      result,
-    };
-
-    // Update doc
+    // Push new message
+    const now = new Date();
     const updateResult = await db.chats.updateOne(
       {
-        _id: chat._id,
+        _id: new ObjectId(chatId),
         userId,
+        status: "idle",
       },
       {
         $set: {
-          updatedAt: new Date(),
+          updatedAt: now,
+          status: "running",
         },
         $push: {
           messages: {
-            $each: [messages[messages.length - 1], resultMessage],
+            date: now,
+            role: "user",
+            content: message,
           },
         },
       }
     );
     if (updateResult.modifiedCount !== 1) {
-      throw new InternalServerError();
+      throw new BadRequestError();
     }
 
+    // Call ChatGPT in the background
+    this._callChatGPT(chatId);
+
     // Get the updated doc
-    chat = await db.chats.findOne({ _id: new ObjectId(chatId) });
+    const chat = await db.chats.findOne({ _id: new ObjectId(chatId) });
     if (!chat) {
       throw new InternalServerError();
     }
@@ -217,5 +172,63 @@ export class ChatController extends Controller {
         "invalid_chat_id"
       );
     }
+  }
+
+  // Call ChatGPT
+  async _callChatGPT(chatId: string) {
+    // Ensure valid user
+    const userId = this.session.getUserIdOrThrow();
+
+    // Ensure valid chat id
+    const chat = await db.chats.findOne({
+      _id: new ObjectId(chatId),
+      userId,
+    });
+    if (!chat) {
+      throw new BadRequestError(
+        "Please provide a valid chat id",
+        "invalid_chat_id"
+      );
+    }
+
+    // Call chat completion
+    const result = await chatgpt.chatComplete(
+      chat.messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+      }))
+    );
+    const resultMessage: Chat["messages"][0] = {
+      date: new Date(result.created * 1000),
+      role: result.choices.length
+        ? result.choices[0].message.role
+        : "assistant",
+      content: result.choices.length
+        ? result.choices[0].message.content || ""
+        : "",
+      result,
+    };
+
+    // Update doc
+    const updateResult = await db.chats.updateOne(
+      {
+        _id: chat._id,
+        userId,
+      },
+      {
+        $set: {
+          updatedAt: new Date(),
+          status: "idle",
+        },
+        $push: {
+          messages: resultMessage,
+        },
+      }
+    );
+    if (updateResult.modifiedCount !== 1) {
+      throw new InternalServerError();
+    }
+
+    // TODO: Push to client
   }
 }

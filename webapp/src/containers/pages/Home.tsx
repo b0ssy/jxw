@@ -55,6 +55,15 @@ export default function Home() {
         setChats(res.data.data);
         if (res.data.data.data.length) {
           setActiveChat(res.data.data.data[0]);
+
+          // Focus on message box
+          messageInputRef.current?.focus();
+
+          // Chat window might be scrolled to bottom previously
+          // So scroll it back to top here
+          if (chatWindowRef.current) {
+            chatWindowRef.current.scrollTop = 0;
+          }
         }
       });
   }, [backend, refreshChats]);
@@ -454,7 +463,12 @@ export default function Home() {
                   }}
                   size="3"
                   autoFocus
-                  placeholder="Send a message"
+                  disabled={activeChat?.status === "running"}
+                  placeholder={
+                    activeChat?.status === "running"
+                      ? "Waiting for reply..."
+                      : "Send a message"
+                  }
                   value={message}
                   style={{
                     padding: "24px 16px",
