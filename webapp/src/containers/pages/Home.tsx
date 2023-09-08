@@ -118,7 +118,7 @@ export default function Home() {
           }}
         >
           <Button
-            variant="outline"
+            variant="soft"
             size="3"
             style={{ flexGrow: "1" }}
             onClick={newChat}
@@ -180,7 +180,7 @@ export default function Home() {
           {/* Account */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
-              <Button variant="soft" size="3" style={{ flexGrow: "1" }}>
+              <Button variant="outline" size="3" style={{ flexGrow: "1" }}>
                 <PersonIcon />
                 Account
                 <Flex grow="1" />
@@ -233,22 +233,28 @@ export default function Home() {
             }}
           >
             {/* Messages */}
-            {activeChat?.messages.map((message, index) => {
-              return (
-                <Flex
-                  key={index}
-                  py="2"
-                  justify={message.role === "assistant" ? "start" : "end"}
-                >
-                  <Flex direction="column">
-                    {message.content.split("\n").map((sentence, index) => (
-                      <div key={index}>{sentence}</div>
-                    ))}
+            <div
+              style={{
+                padding: "0 16px",
+              }}
+            >
+              {activeChat?.messages.map((message, index) => {
+                return (
+                  <Flex
+                    key={index}
+                    py="2"
+                    justify={message.role === "assistant" ? "start" : "end"}
+                  >
+                    <Flex direction="column">
+                      {message.content.split("\n").map((sentence, index) => (
+                        <div key={index}>{sentence}</div>
+                      ))}
+                    </Flex>
                   </Flex>
-                </Flex>
-              );
-            })}
-            <div style={{ height: "100px" }} />
+                );
+              })}
+            </div>
+            <div style={{ height: "200px" }} />
 
             {/* Message box */}
             <Flex
@@ -260,6 +266,21 @@ export default function Home() {
                 width: "768px",
                 height: "150px",
                 bottom: "0",
+                backgroundColor: grayDark.gray1,
+                filter: "blur(12px)",
+              }}
+            />
+            <Flex
+              position="fixed"
+              grow="1"
+              width="100%"
+              align="center"
+              style={{
+                width: "768px",
+                height: "100px",
+                paddingBottom: "50px",
+                bottom: "0",
+                backgroundColor: grayDark.gray1,
               }}
             >
               <TextField.Root style={{ width: "100%" }}>
