@@ -32,7 +32,8 @@ const routes = new Routes({
     }),
     resSuccessBody: zChat.extend({ _id: z.string() }),
     handler: async ({ ctl, body, params }) => {
-      await ctl.update(params.id, body.message);
+      const data = await ctl.update(params.id, body.message);
+      return data;
     },
   })
   .get("/v1/chats", "Get chats", {

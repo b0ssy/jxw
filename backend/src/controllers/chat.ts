@@ -30,7 +30,8 @@ export class ChatController extends Controller {
       },
       {
         role: "system",
-        content: "Reply NO if not marketing related",
+        content:
+          "From now on, you must assume the role of a professional digital marketing advisor. You will only discuss about marketing related questions. Please do not entertain other non-marketing related questions.",
       },
     ];
     const result = await chatgpt.chatComplete(messages);
@@ -118,8 +119,16 @@ export class ChatController extends Controller {
     }
 
     // Call chat completion
-    const result = await chatgpt.chatComplete(chat.messages);
-    const newMessage: Chat["messages"][0] = {
+    const messages = chat.messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    }));
+    messages.push({
+      role: "user",
+      content: message,
+    });
+    const result = await chatgpt.chatComplete(messages);
+    const resultMessage: Chat["messages"][0] = {
       role: result.choices.length
         ? result.choices[0].message.role
         : "assistant",
@@ -137,9 +146,13 @@ export class ChatController extends Controller {
         userId,
       },
       {
-        updatedAt: now,
+        $set: {
+          updatedAt: now,
+        },
         $push: {
-          messages: newMessage,
+          messages: {
+            $each: [messages[messages.length - 1], resultMessage],
+          },
         },
       }
     );
@@ -152,7 +165,7 @@ export class ChatController extends Controller {
     if (!chat) {
       throw new InternalServerError();
     }
-    
+
     return {
       ...chat,
 

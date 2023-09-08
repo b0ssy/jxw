@@ -3,11 +3,11 @@ import { ChatController } from "./chat";
 import { Controller } from "../data/api";
 
 export class Controllers extends Controller {
-  auth() {
+  get auth() {
     return new AuthController({ ctl: this });
   }
 
-  chat() {
+  get chat() {
     return new ChatController({ ctl: this });
   }
 }

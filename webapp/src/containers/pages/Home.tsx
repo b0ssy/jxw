@@ -66,17 +66,16 @@ export default function Home() {
         .createChatApi()
         .v1ChatsPost({ v1ChatsPostRequestBody: { message } });
       setActiveChat(res.data.data);
+      return;
     }
 
     // Update new chat message
-    if (activeChat) {
-      // Get updated chat doc
-      const res = await backend.createChatApi().v1ChatsIdMessagePost({
-        id: activeChat._id,
-        v1ChatsIdMessagePostRequestBody: { message },
-      });
-      setActiveChat(res.data.data);
-    }
+    const res = await backend.createChatApi().v1ChatsIdMessagePost({
+      id: activeChat._id,
+      v1ChatsIdMessagePostRequestBody: { message },
+    });
+    console.log(res);
+    setActiveChat(res.data.data);
   }
 
   // function toggleTheme() {
@@ -218,14 +217,14 @@ export default function Home() {
             }}
           >
             {/* Messages */}
-            {[].map((item, index) => {
+            {activeChat?.messages.map((message, index) => {
               return (
                 <Flex
                   key={index}
                   py="2"
-                  justify={index % 2 === 0 ? "start" : "end"}
+                  justify={message.role === "assistant" ? "start" : "end"}
                 >
-                  <div>{item}</div>
+                  <div>{message.content}</div>
                 </Flex>
               );
             })}
