@@ -146,11 +146,22 @@ export default function Home() {
     // Focus on message box
     messageInputRef.current?.focus();
 
-    // Chat window might be scrolled to bottom previously
-    // So scroll it back to top here
-    if (chatWindowRef.current) {
-      chatWindowRef.current.scrollTop = 0;
-    }
+    // // Chat window might be scrolled to bottom previously
+    // // So scroll it back to top here
+    // if (chatWindowRef.current) {
+    //   chatWindowRef.current.scrollTop = 0;
+    // }
+
+    // Scroll to bottom
+    // Trigger a while later to ensure message is rendered
+    setTimeout(() => {
+      if (chatWindowRef.current) {
+        chatWindowRef.current.scrollBy({
+          top: chatWindowRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
   }
 
   async function sendMessage() {
@@ -451,7 +462,12 @@ export default function Home() {
                                 : irisDark.iris4,
                           }}
                         >
-                          <Flex direction="column" align="end">
+                          <Flex
+                            direction="column"
+                            align={
+                              message.role === "assistant" ? "start" : "end"
+                            }
+                          >
                             {message.content
                               .split("\n")
                               .map((sentence, index) => (
