@@ -77,8 +77,8 @@ export class ChatClient {
     };
 
     // Handle errors
-    this.socket.onerror = (err) => {
-      console.error(`socket error: ${err}`);
+    this.socket.onerror = () => {
+      console.error("Socket error");
     };
 
     // Handle incoming messages
