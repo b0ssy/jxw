@@ -25,13 +25,12 @@ import {
 } from "@radix-ui/react-icons";
 import { grayDark, tealDark, irisDark } from "@radix-ui/colors";
 import moment from "moment";
-import { w3cwebsocket as WebSocketClient } from "websocket";
 import { z } from "zod";
 
-import { ENV } from "../../config";
 import ChatBubble from "../../components/ChatBubble";
 import { useBackend } from "../../lib/backend";
 import { V1ChatsGet200ResponseData } from "../../lib/backend/api";
+import { ChatClient } from "../../lib/chat-client";
 import { useSelector, useDispatch } from "../../redux/store";
 import "./Home.css";
 
@@ -182,44 +181,14 @@ export default function Home() {
       return;
     }
 
-    let closed = false;
-
-    let socket: WebSocketClient | null = null;
-
-    function connect() {
-      const { host } = new URL(ENV.VITE_PROXY_BACKEND);
-      socket = new WebSocketClient(
-        `ws://${host}/chat?token=${accessToken}&id=${activeChatId}`
-      );
-      socket.onclose = () => {
-        // If socket connection closed unexpectedly, then reconnect
-        if (!closed) {
-          setTimeout(() => {
-            console.log("Reconnecting...");
-            connect();
-          }, WEBSOCKET_RECONNECT_TIMEOUT_MILLISECONDS);
-        }
-      };
-      socket.onerror = (err) => {
-        console.error(`socket error: ${err}`);
-      };
-      socket.onmessage = (message) => {
-        // Ensure valid message
-        if (typeof message.data !== "string") {
-          return;
-        }
-
-        // Parse message
-        const data = zChatServerEvent.safeParse(JSON.parse(message.data));
-        if (!data.success) {
-          console.error("Failed to parse message");
-          return;
-        }
-
-        switch (data.data.type) {
+    const client = new ChatClient({
+      accessToken,
+      chatId: activeChatId,
+      onReceive: (event) => {
+        switch (event.type) {
           // Full chat document
           case "chat": {
-            const updatedChat = data.data.data;
+            const updatedChat = event.data;
             setActiveChat((chat) =>
               chat?._id === activeChatId ? updatedChat : null
             );
@@ -227,7 +196,7 @@ export default function Home() {
           }
           // Latest chat response from ChatGPT
           case "chat_content": {
-            const content = data.data.data;
+            const content = event.data;
             setActiveChat((chat) => {
               if (chat && chat?._id === activeChatId) {
                 if (
@@ -260,14 +229,12 @@ export default function Home() {
             break;
           }
         }
-      };
-    }
-
-    connect();
+      },
+    });
+    client.connect();
 
     return () => {
-      closed = true;
-      socket?.close();
+      client.close();
     };
   }, [accessToken, backend, activeChatId]);
 
