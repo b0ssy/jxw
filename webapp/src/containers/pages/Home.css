@@ -1,0 +1,74 @@
+@import '@radix-ui/colors/gray-dark.css';
+
+.Home-root {
+  height: 100vh;
+}
+
+.Home-left-panel {
+  width: 250px;
+  height: 100%;
+  padding: 8px;
+  background-color: var(--gray-3);
+}
+
+.Home-chats {
+  overflow-y: auto;
+}
+.Home-chats-message {
+  margin: 2px 0;
+  cursor: pointer;
+}
+.Home-chats-message-text {
+  width: calc(100% - 24px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.Home-settings-panel {
+  margin-bottom: 8px;
+}
+.Home-account-button {
+  flex-grow: 1;
+}
+.Home-account-menu {
+  width: 232px;
+}
+
+.Home-chat-window {
+  padding-top: 50px;
+  overflow-y: auto;
+}
+.Home-chat-window > div {
+  width: 768px;
+  height: 100%;
+}
+.Home-chat-window-message-container {
+  padding: 0 16px;
+}
+.Home-chat-window-message-placeholder {
+  height: 200px;
+}
+.Home-chat-window-blur-effect {
+  bottom: 0;
+  width: calc(768px + 32px);
+  height: 150px;
+  margin-left: -16px;
+  margin-right: -16px;
+  background-color: var(--gray-1);
+  filter: blur(12px);
+}
+
+.Home-message-box {
+  bottom: 0;
+  width: 768px;
+  height: 100px;
+  padding-bottom: 50px;
+  background-color: var(--gray-1);
+}
+.Home-message-box > .rt-TextFieldRoot {
+  width: 100%;
+}
+.Home-message-box > .rt-TextFieldRoot > input {
+  padding: 24px 16px;
+}

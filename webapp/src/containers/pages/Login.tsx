@@ -14,6 +14,7 @@ import Spinner from "../../components/Spinner";
 import { sleepFn1000ms, isValidEmail } from "../../lib/utils";
 import { useSelector, useDispatch } from "../../redux/store";
 import { useBackend } from "../../lib/backend";
+import "./Login.css";
 
 export default function Login() {
   const initialEmail = useSelector((state) => state.app.email || "");
@@ -70,12 +71,7 @@ export default function Login() {
 
   return (
     <Flex direction="column" align="center" justify="center" height="100%">
-      <Card
-        style={{
-          width: "400px",
-          padding: "36px 24px 0 24px",
-        }}
-      >
+      <Card className="Login-card">
         {/* Heading */}
         <Heading>Login to your account</Heading>
         <Box height="6" />
@@ -160,9 +156,9 @@ export default function Login() {
         {/* Login button */}
         <Box height="6" />
         <Button
+          className="Login-button"
           disabled={loading}
           size="3"
-          style={{ width: "100%" }}
           onClick={handleLogin}
         >
           Login

@@ -23,7 +23,7 @@ import {
   GitHubLogoIcon,
   ExitIcon,
 } from "@radix-ui/react-icons";
-import { grayDark, tealDark, irisDark } from "@radix-ui/colors";
+import { tealDark, irisDark } from "@radix-ui/colors";
 import moment from "moment";
 
 import ChatBubble from "../../components/ChatBubble";
@@ -217,10 +217,12 @@ export default function Home() {
     }
   }
 
+  // Open GitHub link in new tab
   function openGitHub() {
     window.open("https://github.com/b0ssy/jxw");
   }
 
+  // Logout account
   function logout() {
     dispatch({ type: "app/LOGOUT" });
   }
@@ -233,17 +235,9 @@ export default function Home() {
   // }
 
   return (
-    <Flex direction="row" style={{ height: "100vh" }}>
+    <Flex className="Home-root" direction="row">
       {/* Chat left panel */}
-      <Flex
-        direction="column"
-        style={{
-          width: "250px",
-          height: "100%",
-          padding: "8px",
-          backgroundColor: grayDark.gray2,
-        }}
-      >
+      <Flex className="Home-left-panel" direction="column">
         {/* Actions */}
         <Button variant="soft" size="3" onClick={newChat}>
           <PlusIcon />
@@ -253,12 +247,12 @@ export default function Home() {
 
         {/* Chats */}
         <Flex
+          className="Home-chats"
           direction="column"
           align={!chats?.data.length ? "center" : undefined}
           justify={!chats?.data.length ? "center" : undefined}
           grow="1"
           my="2"
-          style={{ overflowY: "auto" }}
         >
           {chats?.data.map((chat) => {
             const firstMessageContent = chat.messages.length
@@ -267,28 +261,22 @@ export default function Home() {
             return (
               <Card
                 key={chat._id}
+                className="Home-chats-message"
                 variant={activeChat?._id === chat._id ? "surface" : "ghost"}
                 title={firstMessageContent}
-                style={{
-                  margin: "2px 0",
-                  cursor: "pointer",
-                }}
                 onClick={() => selectChat(chat)}
               >
                 <Flex gap="2" align="center">
                   <Text
+                    className="Home-chats-message-text"
                     as="div"
                     size="2"
                     weight={activeChat?._id === chat._id ? "bold" : undefined}
-                    style={{
-                      width: "calc(100% - 24px)",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
                   >
                     {firstMessageContent}
                   </Text>
+
+                  {/* Delete chat dialog */}
                   <AlertDialog.Root>
                     <AlertDialog.Trigger>
                       <IconButton
@@ -303,6 +291,8 @@ export default function Home() {
                         <TrashIcon />
                       </IconButton>
                     </AlertDialog.Trigger>
+
+                    {/* Dialog content */}
                     <AlertDialog.Content style={{ maxWidth: 450 }}>
                       <AlertDialog.Title>Delete Chat</AlertDialog.Title>
                       <AlertDialog.Description size="2">
@@ -312,11 +302,14 @@ export default function Home() {
                         Are you sure you want to delete the chat above?
                       </AlertDialog.Description>
                       <Flex gap="3" mt="4" justify="end">
+                        {/* Cancel deletion */}
                         <AlertDialog.Cancel>
                           <Button variant="soft" color="gray">
                             Cancel
                           </Button>
                         </AlertDialog.Cancel>
+
+                        {/* Delete button */}
                         <AlertDialog.Action>
                           <Button
                             variant="solid"
@@ -345,7 +338,7 @@ export default function Home() {
         </Flex>
 
         {/* Bottom panel */}
-        <Flex gap="2" style={{ marginBottom: "8px" }}>
+        <Flex className="Home-settings-panel" gap="2">
           {/* Theme */}
           {/* Disabled for now: don't want to waste time fine-tuning colors */}
           {/* <IconButton variant="surface" size="3" onClick={toggleTheme}>
@@ -356,7 +349,11 @@ export default function Home() {
           {/* Account menu */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
-              <Button variant="outline" size="3" style={{ flexGrow: "1" }}>
+              <Button
+                className="Home-account-button"
+                variant="outline"
+                size="3"
+              >
                 <PersonIcon />
                 Account
                 <Flex grow="1" />
@@ -364,7 +361,7 @@ export default function Home() {
               </Button>
             </DropdownMenu.Trigger>
 
-            <DropdownMenu.Content style={{ width: "232px" }}>
+            <DropdownMenu.Content className="Home-account-menu">
               {/* Open GitHub tab */}
               <DropdownMenu.Item onClick={openGitHub}>
                 GitHub
@@ -386,27 +383,19 @@ export default function Home() {
       {/* Chat window */}
       <Flex
         ref={chatWindowRef}
+        className="Home-chat-window"
         direction="column"
         grow="1"
         align="center"
         justify="center"
         width="100%"
         height="100%"
-        style={{
-          paddingTop: "50px",
-          overflowY: "auto",
-        }}
       >
-        <div
-          style={{
-            width: "768px",
-            height: "100%",
-          }}
-        >
+        <div>
           {/* Messages */}
           {activeChat?.messages.length && (
             <>
-              <div style={{ padding: "0 16px" }}>
+              <div className="Home-chat-window-message-container">
                 {activeChat?.messages.map((message, index) => {
                   if (message.role !== "assistant" && message.role !== "user") {
                     return null;
@@ -484,9 +473,7 @@ export default function Home() {
               align="center"
               justify="center"
               gap="4"
-              style={{
-                height: "100%",
-              }}
+              height="100%"
             >
               <Text size="4" color="gray">
                 Start chatting with our digital marketing advisor!
@@ -497,36 +484,22 @@ export default function Home() {
 
           {/* Blur effect */}
           <Flex
+            className="Home-chat-window-blur-effect"
             position="fixed"
             grow="1"
             width="100%"
             align="center"
-            style={{
-              width: "calc(768px + 32px)",
-              height: "150px",
-              marginLeft: "-16px",
-              marginRight: "-16px",
-              bottom: "0",
-              backgroundColor: grayDark.gray1,
-              filter: "blur(12px)",
-            }}
           />
 
           {/* Message box */}
           <Flex
+            className="Home-message-box"
             position="fixed"
             grow="1"
             width="100%"
             align="center"
-            style={{
-              bottom: "0",
-              width: "768px",
-              height: "100px",
-              paddingBottom: "50px",
-              backgroundColor: grayDark.gray1,
-            }}
           >
-            <TextField.Root style={{ width: "100%" }}>
+            <TextField.Root>
               <TextField.Input
                 ref={messageInputRef}
                 size="3"
@@ -538,7 +511,6 @@ export default function Home() {
                     : "Send a message"
                 }
                 value={message}
-                style={{ padding: "24px 16px" }}
                 onChange={(e) => {
                   setMessage(e.target.value);
                 }}
@@ -548,7 +520,7 @@ export default function Home() {
                   }
                 }}
               />
-              <TextField.Slot style={{ marginRight: "8px" }}>
+              <TextField.Slot>
                 <IconButton disabled={!message}>
                   <PaperPlaneIcon />
                 </IconButton>
