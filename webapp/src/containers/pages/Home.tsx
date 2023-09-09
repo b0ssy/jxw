@@ -60,17 +60,13 @@ export default function Home() {
       .then((res) => {
         // Chats should be already sorted by created date in descending order
         setChats(res.data.data);
-        if (res.data.data.data.length) {
+
+        // Set first chat as active if no active chat yet
+        if (res.data.data.data.length && !activeChat) {
           setActiveChat(res.data.data.data[0]);
 
           // Focus on message box
           messageInputRef.current?.focus();
-
-          // Chat window might be scrolled to bottom previously
-          // So scroll it back to top here
-          if (chatWindowRef.current) {
-            chatWindowRef.current.scrollTop = 0;
-          }
         }
       });
   }, [backend, refreshChats]);
@@ -123,6 +119,9 @@ export default function Home() {
               }
               return chat ? { ...chat } : null;
             });
+
+            // Refresh all chats at end
+            setRefreshChats(Date.now());
 
             // Focus on message box
             // Set timeout to run after it is enabled
