@@ -52,6 +52,7 @@ export class ChatServer {
     });
   }
 
+  // Connect to existing HTTP server
   connect(httpServer: Server) {
     httpServer.on("upgrade", (request, socket, head) => {
       this.server.handleUpgrade(request, socket, head, (websocket) => {
@@ -60,6 +61,8 @@ export class ChatServer {
     });
   }
 
+  // Broadcast event to all clients associated with chat id
+  // NOTE: This function is not horizontally scalable yet
   async broadcast(chatId: string, event: ChatServerEvent) {
     const clients = this.clients[chatId] || [];
     for (const client of clients) {
@@ -67,11 +70,13 @@ export class ChatServer {
     }
   }
 
+  // Handle an incoming connection
   private async handleConnection(
     connection: WebSocket,
     request: IncomingMessage
   ) {
     try {
+      // Ensure valid url
       if (!request.url) {
         throw new BadRequestError("Please provide a valid URL", "invalid_url");
       }
@@ -117,19 +122,22 @@ export class ChatServer {
       this.clients[chatId] = this.clients[chatId] || [];
       this.clients[chatId].push(client);
 
-      // Send chat document
+      // Send full chat document initially
       const chat = await chatController.get(chatId);
       await this.sendServerEvent(client, { type: "chat", data: chat });
     } catch (err) {
+      // Close connection on any errors
       connection.close();
     }
   }
 
+  // Send event to a client
   private async sendServerEvent(client: Client, event: ChatServerEvent) {
     client.connection.send(JSON.stringify(event));
   }
 }
 
+// Represents a client connection
 export type Client = {
   connection: WebSocket;
   session: Session;
