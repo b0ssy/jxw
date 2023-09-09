@@ -68,8 +68,6 @@ export type Chat = V1ChatsGet200ResponseData["data"][0];
 
 // export const POLL_ACTIVE_CHAT_MILLISECONDS = 1000;
 
-export const WEBSOCKET_RECONNECT_TIMEOUT_MILLISECONDS = 1000;
-
 export default function Home() {
   // const themeMode = useSelector((state) => state.app.themeMode);
   const accessToken = useSelector((state) => state.app.accessToken);
@@ -254,22 +252,22 @@ export default function Home() {
     // Focus on message box
     messageInputRef.current?.focus();
 
-    // // Chat window might be scrolled to bottom previously
-    // // So scroll it back to top here
-    // if (chatWindowRef.current) {
-    //   chatWindowRef.current.scrollTop = 0;
-    // }
+    // Chat window might be scrolled to bottom previously
+    // So scroll it back to top here
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = 0;
+    }
 
     // Scroll to bottom
     // Trigger a while later to ensure message is rendered
-    setTimeout(() => {
-      if (chatWindowRef.current) {
-        chatWindowRef.current.scrollBy({
-          top: chatWindowRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-      }
-    }, 100);
+    // setTimeout(() => {
+    //   if (chatWindowRef.current) {
+    //     chatWindowRef.current.scrollBy({
+    //       top: chatWindowRef.current.scrollHeight,
+    //       behavior: "smooth",
+    //     });
+    //   }
+    // }, 100);
   }
 
   // Send chat message
@@ -520,7 +518,9 @@ export default function Home() {
                   const now = moment();
                   const date = moment(message.date);
                   const dateStr =
-                    activeChat.status === "idle"
+                    activeChat.status === "idle" ||
+                    message.role === "user" ||
+                    index < activeChat.messages.length - 1
                       ? `${
                           // today
                           +now.clone().startOf("day") ===
