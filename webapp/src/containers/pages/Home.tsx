@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { Fragment, useRef, useState, useEffect } from "react";
 import {
   Flex,
   Card,
@@ -552,16 +552,20 @@ export default function Home() {
                   }
                   const now = moment();
                   const date = moment(message.date);
-                  const dateStr = `${
-                    // today
-                    +now.clone().startOf("day") === +date.clone().startOf("day")
-                      ? " "
-                      : // yesterday
-                      +now.clone().subtract(1, "day").startOf("day") ===
-                        +date.clone().startOf("day")
-                      ? "yesterday, "
-                      : `${date.format("D MMM YY")}, `
-                  }${date.format("h:mm a")}`;
+                  const dateStr =
+                    activeChat.status === "idle"
+                      ? `${
+                          // today
+                          +now.clone().startOf("day") ===
+                          +date.clone().startOf("day")
+                            ? " "
+                            : // yesterday
+                            +now.clone().subtract(1, "day").startOf("day") ===
+                              +date.clone().startOf("day")
+                            ? "yesterday, "
+                            : `${date.format("D MMM YY")}, `
+                        }${date.format("h:mm a")}`
+                      : "";
                   return (
                     <Flex
                       key={index}
@@ -583,7 +587,10 @@ export default function Home() {
                           {message.content
                             .split("\n")
                             .map((sentence, index) => (
-                              <div key={index}>{sentence}</div>
+                              <Fragment key={index}>
+                                {sentence && <div>{sentence}</div>}
+                                {!sentence && <br />}
+                              </Fragment>
                             ))}
                         </Flex>
                         <div style={{ height: "4px" }} />
