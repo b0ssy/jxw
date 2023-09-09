@@ -54,7 +54,9 @@ export class ChatClient {
   connect() {
     const { host } = new URL(ENV.VITE_PROXY_BACKEND);
     this.socket = new WebSocketClient(
-      `ws://${host}/chat?token=${this.options.accessToken}&id=${this.options.chatId}`
+      `${ENV.DEV ? "ws" : "wss"}://${host}/chat?token=${
+        this.options.accessToken
+      }&id=${this.options.chatId}`
     );
     this.socket.onclose = () => {
       // If socket connection closed unexpectedly, then reconnect
