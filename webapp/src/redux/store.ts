@@ -20,8 +20,11 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 export const store = createStore(persistedReducer);
 export const persistor = persistStore(store);
 
+// Type-safe useSelector variant
 export const useSelector = <TSelected>(
   selector: (state: State) => TSelected,
   equalityFn?: (left: TSelected, right: TSelected) => boolean
 ) => useSelectorRedux<State, TSelected>(selector, equalityFn);
+
+// Type-safe useDispatch variant
 export const useDispatch = () => useDispatchRedux<Dispatch<Action>>();

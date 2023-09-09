@@ -44,6 +44,7 @@ export default function Login() {
     }
     setErr({});
 
+    // Set a fake delay
     setLoading(true);
     const result = await sleepFn1000ms(
       backend.createAuthApi().v1LoginPost({
@@ -54,6 +55,7 @@ export default function Login() {
       })
     ).catch(() => null);
     setLoading(false);
+
     if (!result?.data) {
       setPassword("");
       setErr({ login: "Incorrect email or password" });

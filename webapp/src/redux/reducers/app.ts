@@ -5,11 +5,15 @@ import * as appActions from "../actions/app";
 
 export const zState = z.object({
   themeMode: z.enum(["light", "dark"]),
+
+  // Last entered email in login screen
   email: z.string().optional(),
+
   accessToken: z.string().optional(),
 });
 export type State = z.infer<typeof zState>;
 
+// Check if system is dark mode
 export const isSystemDarkMode = () => {
   return (
     window.matchMedia &&

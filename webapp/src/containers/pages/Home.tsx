@@ -25,7 +25,6 @@ import {
 } from "@radix-ui/react-icons";
 import { grayDark, tealDark, irisDark } from "@radix-ui/colors";
 import moment from "moment";
-import { z } from "zod";
 
 import ChatBubble from "../../components/ChatBubble";
 import { useBackend } from "../../lib/backend";
@@ -34,39 +33,7 @@ import { ChatClient } from "../../lib/chat-client";
 import { useSelector, useDispatch } from "../../redux/store";
 import "./Home.css";
 
-// Websocket server events
-export const zChatServerEvent = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("chat"),
-    data: z.object({
-      _id: z.string(),
-      createdAt: z.string(),
-      updatedAt: z.string(),
-      userId: z.string(),
-      status: z.enum(["idle", "running"]),
-      messages: z
-        .object({
-          date: z.string(),
-          role: z.enum(["user", "assistant", "system", "function"]),
-          content: z.string(),
-          result: z.any().nullish(),
-        })
-        .array(),
-    }),
-  }),
-  z.object({
-    type: z.literal("chat_content"),
-    data: z.string(),
-  }),
-  z.object({
-    type: z.literal("chat_content_end"),
-  }),
-]);
-export type ChatServerEvent = z.infer<typeof zChatServerEvent>;
-
 export type Chat = V1ChatsGet200ResponseData["data"][0];
-
-// export const POLL_ACTIVE_CHAT_MILLISECONDS = 1000;
 
 export default function Home() {
   // const themeMode = useSelector((state) => state.app.themeMode);
@@ -84,7 +51,6 @@ export default function Home() {
   const messageInputRef = useRef<HTMLInputElement | null>(null);
 
   const activeChatId = activeChat?._id;
-  // const activeChatStatus = activeChat?.status;
 
   // Query for chats
   useEffect(() => {
@@ -108,70 +74,6 @@ export default function Home() {
         }
       });
   }, [backend, refreshChats]);
-
-  // Disabled polling approach, now uses websockets
-  //
-  // Check for updates to active chat
-  //
-  // Use stupid polling method for now
-  // I know this is ugly, but bear with me for a moment
-  // If needed, will migrate to use of websockets for push updates
-  // useEffect(() => {
-  //   if (!activeChatId || activeChatStatus !== "running") {
-  //     return;
-  //   }
-
-  //   async function getLatestChat(id: string) {
-  //     const res = await backend
-  //       .createChatApi()
-  //       .v1ChatsIdGet({ id })
-  //       .catch(() => null);
-  //     if (!res) {
-  //       return;
-  //     }
-
-  //     // Update active chat
-  //     setActiveChat((chat) =>
-  //       chat?._id === res.data.data._id ? res.data.data : chat
-  //     );
-
-  //     // Update chats
-  //     setChats((chats) => {
-  //       if (chats) {
-  //         for (let i = 0; i < chats.data.length; i++) {
-  //           if (chats.data[i]._id === res.data.data._id) {
-  //             chats.data[i] = res.data.data;
-  //           }
-  //         }
-  //       }
-  //       return chats;
-  //     });
-
-  //     // Scroll to bottom once completed
-  //     // Trigger a while later to ensure message is rendered
-  //     setTimeout(() => {
-  //       if (res.data.data.status === "idle" && chatWindowRef.current) {
-  //         chatWindowRef.current.scrollBy({
-  //           top: chatWindowRef.current.scrollHeight,
-  //           behavior: "smooth",
-  //         });
-  //       }
-
-  //       // Focus on message box
-  //       messageInputRef.current?.focus();
-  //     }, 100);
-  //   }
-
-  //   const timer = setInterval(() => {
-  //     getLatestChat(activeChatId);
-  //   }, POLL_ACTIVE_CHAT_MILLISECONDS);
-
-  //   getLatestChat(activeChatId);
-
-  //   return () => {
-  //     clearInterval(timer);
-  //   };
-  // }, [backend, activeChatId, activeChatStatus]);
 
   // Load active chat messages
   useEffect(() => {
@@ -263,25 +165,16 @@ export default function Home() {
     if (chatWindowRef.current) {
       chatWindowRef.current.scrollTop = 0;
     }
-
-    // Scroll to bottom
-    // Trigger a while later to ensure message is rendered
-    // setTimeout(() => {
-    //   if (chatWindowRef.current) {
-    //     chatWindowRef.current.scrollBy({
-    //       top: chatWindowRef.current.scrollHeight,
-    //       behavior: "smooth",
-    //     });
-    //   }
-    // }, 100);
   }
 
   // Send chat message
   async function sendMessage() {
+    // Nothing to send
     if (!message) {
       return;
     }
 
+    // Clear message
     setMessage("");
 
     // Scroll to bottom
@@ -311,9 +204,6 @@ export default function Home() {
       id: activeChat._id,
       v1ChatsIdMessagePostRequestBody: { message },
     });
-
-    // Chat will be automatically updated via websocket
-    // setActiveChat(res.data.data);
   }
 
   // Delete chat
@@ -327,13 +217,6 @@ export default function Home() {
     }
   }
 
-  // function toggleTheme() {
-  //   dispatch({
-  //     type: "app/SET_THEME_MODE",
-  //     themeMode: themeMode === "light" ? "dark" : "light",
-  //   });
-  // }
-
   function openGitHub() {
     window.open("https://github.com/b0ssy/jxw");
   }
@@ -341,6 +224,13 @@ export default function Home() {
   function logout() {
     dispatch({ type: "app/LOGOUT" });
   }
+
+  // function toggleTheme() {
+  //   dispatch({
+  //     type: "app/SET_THEME_MODE",
+  //     themeMode: themeMode === "light" ? "dark" : "light",
+  //   });
+  // }
 
   return (
     <Flex direction="row" style={{ height: "100vh" }}>

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { ENV } from "../config";
 
+// Reconnect websocket in milliseconds
 export const WEBSOCKET_RECONNECT_TIMEOUT_MILLISECONDS = 1000;
 
 // Websocket server events
@@ -35,6 +36,7 @@ export const zChatServerEvent = z.discriminatedUnion("type", [
 ]);
 export type ChatServerEvent = z.infer<typeof zChatServerEvent>;
 
+// ChatClient options
 export type ChatClientOptions = {
   accessToken: string;
   chatId: string;
@@ -51,6 +53,7 @@ export class ChatClient {
     this.options = options;
   }
 
+  // Open client websocket connection
   connect() {
     const { host } = new URL(ENV.VITE_PROXY_BACKEND);
     this.socket = new WebSocketClient(
@@ -58,6 +61,8 @@ export class ChatClient {
         this.options.accessToken
       }&id=${this.options.chatId}`
     );
+
+    // Handle socket connection closed
     this.socket.onclose = () => {
       // If socket connection closed unexpectedly, then reconnect
       if (this.isOpen) {
@@ -70,9 +75,13 @@ export class ChatClient {
         }, WEBSOCKET_RECONNECT_TIMEOUT_MILLISECONDS);
       }
     };
+
+    // Handle errors
     this.socket.onerror = (err) => {
       console.error(`socket error: ${err}`);
     };
+
+    // Handle incoming messages
     this.socket.onmessage = (message) => {
       // Ensure valid message
       if (typeof message.data !== "string") {
@@ -86,8 +95,10 @@ export class ChatClient {
         return;
       }
 
+      // Trigger callback
       this.options.onReceive(data.data);
     };
+
     this.isOpen = true;
   }
 
