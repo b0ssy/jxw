@@ -11,23 +11,28 @@ import { ChatController } from "../controllers/chat";
 // Path to websocket server
 export const CHAT_PATH = "/chat";
 
-// Request header with chat id
-export const CHAT_ID_HEADER = "x-chat-id";
-
-export const zServerEvent = z.discriminatedUnion("type", [
+// Websocket server events
+export const zChatServerEvent = z.discriminatedUnion("type", [
+  // Full chat document
   z.object({
     type: z.literal("chat"),
     data: zChat.extend({ _id: z.string() }),
   }),
+  // Latest chat response from ChatGPT
   z.object({
     type: z.literal("chat_content"),
     data: z.string(),
   }),
+  // Indicates that chat content has ended
+  z.object({
+    type: z.literal("chat_content_end"),
+  }),
 ]);
-export type ServerEvent = z.infer<typeof zServerEvent>;
+export type ChatServerEvent = z.infer<typeof zChatServerEvent>;
 
 export type ChatServerOptions = {};
 
+// A chat websocket server for emitting ChatGPT responses in real-time
 export class ChatServer {
   options: ChatServerOptions;
   server: WebSocketServer;
@@ -55,10 +60,10 @@ export class ChatServer {
     });
   }
 
-  async broadcastChatContent(chatId: string, content: string) {
+  async broadcast(chatId: string, event: ChatServerEvent) {
     const clients = this.clients[chatId] || [];
     for (const client of clients) {
-      this.sendServerEvent(client, { type: "chat_content", data: content });
+      this.sendServerEvent(client, event);
     }
   }
 
@@ -67,24 +72,30 @@ export class ChatServer {
     request: IncomingMessage
   ) {
     try {
+      if (!request.url) {
+        throw new BadRequestError("Please provide a valid URL", "invalid_url");
+      }
+
+      // Parse url
+      const url = new URL(`ws://127.0.0.1:${request.url}`);
+
       // Get chat id
-      const chatId = request.headers[CHAT_ID_HEADER];
-      if (typeof chatId !== "string" || !chatId) {
+      const chatId = url.searchParams.get("id");
+      if (!chatId) {
         throw new BadRequestError(
-          `Please provide a valid chat id via "${CHAT_ID_HEADER}" header`,
+          "Please provide a valid chat id",
           "invalid_chat_id"
         );
       }
 
       // Authenticate user
-      const authorization = request.headers.authorization;
-      if (!authorization?.startsWith("Bearer ")) {
+      const accessToken = url.searchParams.get("token");
+      if (!accessToken) {
         throw new NotAuthorizedError(
-          "Please provide a valid access token",
-          "invalid_access_token"
+          "Please provide a valid token",
+          "invalid_token"
         );
       }
-      const accessToken = authorization.slice("Bearer ".length);
       const jwtPayload = decodeJWTPayload(accessToken);
 
       // Ensure chat belongs to user
@@ -110,12 +121,11 @@ export class ChatServer {
       const chat = await chatController.get(chatId);
       await this.sendServerEvent(client, { type: "chat", data: chat });
     } catch (err) {
-      console.log(err);
       connection.close();
     }
   }
 
-  private async sendServerEvent(client: Client, event: ServerEvent) {
+  private async sendServerEvent(client: Client, event: ChatServerEvent) {
     client.connection.send(JSON.stringify(event));
   }
 }

@@ -13,5 +13,11 @@ export default defineConfig(({ mode }) => {
         "/v1": env.VITE_PROXY_BACKEND,
       },
     },
+
+    // Fix usage of "websocket" library
+    // https://stackoverflow.com/questions/75883720/504-outdated-optimize-dep-while-using-react-vite
+    optimizeDeps: {
+      exclude: ["js-big-decimal"],
+    },
   };
 });

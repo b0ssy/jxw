@@ -2,6 +2,7 @@ import { ObjectId, WithId } from "mongodb";
 
 import db, { Chat } from "../data/db";
 import chatgpt from "../data/chatgpt";
+import chatServer from "../data/chat-server";
 import { Controller } from "../data/api";
 import { Logger } from "../helpers/logger";
 import { BadRequestError, InternalServerError } from "../errors";
@@ -54,16 +55,23 @@ export class ChatController extends Controller {
       messages,
     });
 
-    // Call ChatGPT in the background
-    this._callChatGPT(insertedId.toHexString());
-
     // Get the inserted doc
     const chat = await db.chats.findOne({ _id: insertedId });
     if (!chat) {
       throw new InternalServerError();
     }
+    const postprocessedChat = this.postprocessChat(chat);
 
-    return this.postprocessChat(chat);
+    // Send updated doc
+    chatServer.broadcast(insertedId.toHexString(), {
+      type: "chat",
+      data: postprocessedChat,
+    });
+
+    // Call ChatGPT in the background
+    this._callChatGPT(insertedId.toHexString());
+
+    return postprocessedChat;
   }
 
   // Get one chat
@@ -140,16 +148,23 @@ export class ChatController extends Controller {
       throw new BadRequestError();
     }
 
-    // Call ChatGPT in the background
-    this._callChatGPT(chatId);
-
     // Get the updated doc
     const chat = await db.chats.findOne({ _id: new ObjectId(chatId) });
     if (!chat) {
       throw new InternalServerError();
     }
+    const postprocessedChat = this.postprocessChat(chat);
 
-    return this.postprocessChat(chat);
+    // Send updated doc
+    chatServer.broadcast(chatId, {
+      type: "chat",
+      data: postprocessedChat,
+    });
+
+    // Call ChatGPT in the background
+    this._callChatGPT(chatId);
+
+    return postprocessedChat;
   }
 
   // Delete chat

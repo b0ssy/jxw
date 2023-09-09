@@ -4,7 +4,10 @@ import chatServer from "./chat-server";
 import { ENV } from "../config";
 
 // Default GPT model to use
-const MODEL = "gpt-3.5-turbo";
+export const MODEL = "gpt-3.5-turbo";
+
+// Number of chunks to send in a batch
+export const SEND_CHUNK_BATCH_COUNT = 5;
 
 export type ChatGPTMessage = {
   role: "user" | "assistant" | "system" | "function";
@@ -54,8 +57,11 @@ export class ChatGPT {
 
         // Emit contents every 10 chunks
         // For now, emit the full content
-        if (contents.length % 10 === 0) {
-          chatServer.broadcastChatContent(chatId, contents.join(""));
+        if (contents.length % SEND_CHUNK_BATCH_COUNT === 0) {
+          chatServer.broadcast(chatId, {
+            type: "chat_content",
+            data: contents.join(""),
+          });
         }
       }
     }
@@ -64,9 +70,16 @@ export class ChatGPT {
     }
 
     // Emit the full content at the end
-    if (contents.length % 10 !== 0) {
-      chatServer.broadcastChatContent(chatId, contents.join(""));
+    if (contents.length % SEND_CHUNK_BATCH_COUNT !== 0) {
+      chatServer.broadcast(chatId, {
+        type: "chat_content",
+        data: contents.join(""),
+      });
     }
+    // Indicate no more content
+    chatServer.broadcast(chatId, {
+      type: "chat_content_end",
+    });
 
     return {
       ...result,

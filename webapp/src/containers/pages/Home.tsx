@@ -25,19 +25,55 @@ import {
 } from "@radix-ui/react-icons";
 import { grayDark, tealDark, irisDark } from "@radix-ui/colors";
 import moment from "moment";
+import { w3cwebsocket as WebSocketClient } from "websocket";
+import { z } from "zod";
 
-import { /**useSelector, */ useDispatch } from "../../redux/store";
-import { V1ChatsGet200ResponseData } from "../../lib/backend/api";
-import { useBackend } from "../../lib/backend";
+import { ENV } from "../../config";
 import ChatBubble from "../../components/ChatBubble";
+import { useBackend } from "../../lib/backend";
+import { V1ChatsGet200ResponseData } from "../../lib/backend/api";
+import { useSelector, useDispatch } from "../../redux/store";
 import "./Home.css";
+
+// Websocket server events
+export const zChatServerEvent = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("chat"),
+    data: z.object({
+      _id: z.string(),
+      createdAt: z.string(),
+      updatedAt: z.string(),
+      userId: z.string(),
+      status: z.enum(["idle", "running"]),
+      messages: z
+        .object({
+          date: z.string(),
+          role: z.enum(["user", "assistant", "system", "function"]),
+          content: z.string(),
+          result: z.any().nullish(),
+        })
+        .array(),
+    }),
+  }),
+  z.object({
+    type: z.literal("chat_content"),
+    data: z.string(),
+  }),
+  z.object({
+    type: z.literal("chat_content_end"),
+  }),
+]);
+export type ChatServerEvent = z.infer<typeof zChatServerEvent>;
 
 export type Chat = V1ChatsGet200ResponseData["data"][0];
 
-export const POLL_ACTIVE_CHAT_MILLISECONDS = 1000;
+// export const POLL_ACTIVE_CHAT_MILLISECONDS = 1000;
+
+export const WEBSOCKET_RECONNECT_TIMEOUT_MILLISECONDS = 1000;
 
 export default function Home() {
   // const themeMode = useSelector((state) => state.app.themeMode);
+  const accessToken = useSelector((state) => state.app.accessToken);
   const dispatch = useDispatch();
 
   const backend = useBackend();
@@ -51,7 +87,7 @@ export default function Home() {
   const messageInputRef = useRef<HTMLInputElement | null>(null);
 
   const activeChatId = activeChat?._id;
-  const activeChatStatus = activeChat?.status;
+  // const activeChatStatus = activeChat?.status;
 
   // Query for chats
   useEffect(() => {
@@ -76,67 +112,164 @@ export default function Home() {
       });
   }, [backend, refreshChats]);
 
+  // Disabled polling approach, now uses websockets
+  //
   // Check for updates to active chat
   //
   // Use stupid polling method for now
   // I know this is ugly, but bear with me for a moment
   // If needed, will migrate to use of websockets for push updates
+  // useEffect(() => {
+  //   if (!activeChatId || activeChatStatus !== "running") {
+  //     return;
+  //   }
+
+  //   async function getLatestChat(id: string) {
+  //     const res = await backend
+  //       .createChatApi()
+  //       .v1ChatsIdGet({ id })
+  //       .catch(() => null);
+  //     if (!res) {
+  //       return;
+  //     }
+
+  //     // Update active chat
+  //     setActiveChat((chat) =>
+  //       chat?._id === res.data.data._id ? res.data.data : chat
+  //     );
+
+  //     // Update chats
+  //     setChats((chats) => {
+  //       if (chats) {
+  //         for (let i = 0; i < chats.data.length; i++) {
+  //           if (chats.data[i]._id === res.data.data._id) {
+  //             chats.data[i] = res.data.data;
+  //           }
+  //         }
+  //       }
+  //       return chats;
+  //     });
+
+  //     // Scroll to bottom once completed
+  //     // Trigger a while later to ensure message is rendered
+  //     setTimeout(() => {
+  //       if (res.data.data.status === "idle" && chatWindowRef.current) {
+  //         chatWindowRef.current.scrollBy({
+  //           top: chatWindowRef.current.scrollHeight,
+  //           behavior: "smooth",
+  //         });
+  //       }
+
+  //       // Focus on message box
+  //       messageInputRef.current?.focus();
+  //     }, 100);
+  //   }
+
+  //   const timer = setInterval(() => {
+  //     getLatestChat(activeChatId);
+  //   }, POLL_ACTIVE_CHAT_MILLISECONDS);
+
+  //   getLatestChat(activeChatId);
+
+  //   return () => {
+  //     clearInterval(timer);
+  //   };
+  // }, [backend, activeChatId, activeChatStatus]);
+
+  // Load active chat messages
   useEffect(() => {
-    if (!activeChatId || activeChatStatus !== "running") {
+    if (!activeChatId || !accessToken) {
       return;
     }
 
-    async function getLatestChat(id: string) {
-      const res = await backend
-        .createChatApi()
-        .v1ChatsIdGet({ id })
-        .catch(() => null);
-      if (!res) {
-        return;
-      }
+    let closed = false;
 
-      // Update active chat
-      setActiveChat((chat) =>
-        chat?._id === res.data.data._id ? res.data.data : chat
+    let socket: WebSocketClient | null = null;
+
+    function connect() {
+      const { host } = new URL(ENV.VITE_PROXY_BACKEND);
+      socket = new WebSocketClient(
+        `ws://${host}/chat?token=${accessToken}&id=${activeChatId}`
       );
+      socket.onclose = () => {
+        // If socket connection closed unexpectedly, then reconnect
+        if (!closed) {
+          setTimeout(() => {
+            console.log("Reconnecting...");
+            connect();
+          }, WEBSOCKET_RECONNECT_TIMEOUT_MILLISECONDS);
+        }
+      };
+      socket.onerror = (err) => {
+        console.error(`socket error: ${err}`);
+      };
+      socket.onmessage = (message) => {
+        // Ensure valid message
+        if (typeof message.data !== "string") {
+          return;
+        }
 
-      // Update chats
-      setChats((chats) => {
-        if (chats) {
-          for (let i = 0; i < chats.data.length; i++) {
-            if (chats.data[i]._id === res.data.data._id) {
-              chats.data[i] = res.data.data;
-            }
+        // Parse message
+        const data = zChatServerEvent.safeParse(JSON.parse(message.data));
+        if (!data.success) {
+          console.error("Failed to parse message");
+          return;
+        }
+
+        switch (data.data.type) {
+          // Full chat document
+          case "chat": {
+            const updatedChat = data.data.data;
+            setActiveChat((chat) =>
+              chat?._id === activeChatId ? updatedChat : null
+            );
+            break;
+          }
+          // Latest chat response from ChatGPT
+          case "chat_content": {
+            const content = data.data.data;
+            setActiveChat((chat) => {
+              if (chat && chat?._id === activeChatId) {
+                if (
+                  !chat.messages.length ||
+                  chat.messages[chat.messages.length - 1].role !== "assistant"
+                ) {
+                  chat.messages.push({
+                    date: new Date().toISOString(),
+                    role: "assistant",
+                    content: "",
+                  });
+                }
+                chat.messages[chat.messages.length - 1].content = content;
+              }
+              return chat ? { ...chat } : null;
+            });
+            break;
+          }
+          // Indicates that chat content has ended
+          case "chat_content_end": {
+            setActiveChat((chat) => {
+              if (chat && chat?._id === activeChatId) {
+                chat.status = "idle";
+              }
+              return chat ? { ...chat } : null;
+            });
+            break;
+          }
+          default: {
+            break;
           }
         }
-        return chats;
-      });
-
-      // Scroll to bottom once completed
-      // Trigger a while later to ensure message is rendered
-      setTimeout(() => {
-        if (res.data.data.status === "idle" && chatWindowRef.current) {
-          chatWindowRef.current.scrollBy({
-            top: chatWindowRef.current.scrollHeight,
-            behavior: "smooth",
-          });
-        }
-
-        // Focus on message box
-        messageInputRef.current?.focus();
-      }, 100);
+      };
     }
 
-    const timer = setInterval(() => {
-      getLatestChat(activeChatId);
-    }, POLL_ACTIVE_CHAT_MILLISECONDS);
-
-    getLatestChat(activeChatId);
+    connect();
 
     return () => {
-      clearInterval(timer);
+      closed = true;
+      socket?.close();
     };
-  }, [backend, activeChatId, activeChatStatus]);
+  }, [accessToken, backend, activeChatId]);
 
   // Create new chat
   function newChat() {
@@ -203,11 +336,13 @@ export default function Home() {
     }
 
     // Update new chat message
-    const res = await backend.createChatApi().v1ChatsIdMessagePost({
+    await backend.createChatApi().v1ChatsIdMessagePost({
       id: activeChat._id,
       v1ChatsIdMessagePostRequestBody: { message },
     });
-    setActiveChat(res.data.data);
+
+    // Chat will be automatically updated via websocket
+    // setActiveChat(res.data.data);
   }
 
   // Delete chat
