@@ -190,6 +190,7 @@ export class ChatController extends Controller {
     // Call chat completion
     const result = await chatgpt
       .chatComplete(
+        chat._id.toHexString(),
         chat.messages.map((message) => ({
           role: message.role,
           content: message.content,
@@ -200,6 +201,7 @@ export class ChatController extends Controller {
           message: err?.message ?? "",
           stack: err?.stack ?? "",
         });
+        return null;
       });
     // Error occured, update status back to idle
     if (!result) {
@@ -248,12 +250,10 @@ export class ChatController extends Controller {
     if (updateResult.modifiedCount !== 1) {
       throw new InternalServerError();
     }
-
-    // TODO: Push to client
   }
 
   // Post process chat document
-  // - Covnert _id to hex string
+  // - Convert _id to hex string
   // - Remove system messages
   postprocessChat(chat: WithId<Chat>) {
     return {

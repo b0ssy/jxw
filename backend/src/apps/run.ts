@@ -7,6 +7,7 @@ import bodyParser from "body-parser";
 
 import { ENV } from "../config";
 import { db } from "../data";
+import chatServer from "../data/chat-server";
 import { mountRoutes } from "../routes";
 import { Logger } from "../helpers/logger";
 
@@ -59,6 +60,9 @@ export const execute = async () => {
       resolve(svr);
     });
   });
+
+  // Handle chat websocket server
+  chatServer.connect(server);
 
   return { server };
 };
