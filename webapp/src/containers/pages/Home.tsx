@@ -221,6 +221,12 @@ export default function Home() {
               }
               return chat ? { ...chat } : null;
             });
+
+            // Focus on message box
+            // Set timeout to run after it is enabled
+            setTimeout(() => {
+              messageInputRef.current?.focus();
+            }, 0);
             break;
           }
           default: {
