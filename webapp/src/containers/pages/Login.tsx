@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Box,
   Card,
@@ -27,17 +27,18 @@ export default function Login() {
     [k in "email" | "password" | "login"]?: string | null;
   }>({});
   const [loading, setLoading] = useState(false);
-  let emailRef: HTMLInputElement | null = null;
-  let passwordRef: HTMLInputElement | null = null;
+
+  const emailRef = useRef<HTMLInputElement | null>(null);
+  const passwordRef = useRef<HTMLInputElement | null>(null);
 
   async function handleLogin() {
     if (!isValidEmail(email)) {
-      emailRef?.focus();
+      emailRef.current?.focus();
       setErr({ email: "Please enter a valid email" });
       return;
     }
     if (!password) {
-      passwordRef?.focus();
+      passwordRef.current?.focus();
       setErr({ password: "Please enter a valid password" });
       return;
     }
@@ -66,18 +67,14 @@ export default function Login() {
   }
 
   return (
-    <Flex
-      direction="column"
-      align="center"
-      justify="center"
-      style={{ height: "100%" }}
-    >
+    <Flex direction="column" align="center" justify="center" height="100%">
       <Card
         style={{
           width: "400px",
           padding: "36px 24px 0 24px",
         }}
       >
+        {/* Heading */}
         <Heading>Login to your account</Heading>
         <Box height="6" />
 
@@ -92,9 +89,7 @@ export default function Login() {
             variant={err.email ? "soft" : undefined}
             color={err.email ? "red" : undefined}
             value={email}
-            ref={(ref) => {
-              emailRef = ref;
-            }}
+            ref={emailRef}
             onChange={(e) => {
               setErr({});
               setEmail(e.target.value);
@@ -103,11 +98,11 @@ export default function Login() {
             onKeyUp={(e) => {
               if (e.key === "Enter") {
                 if (!isValidEmail(email)) {
-                  emailRef?.focus();
+                  emailRef.current?.focus();
                   setErr({ email: "Please enter a valid email" });
                   return;
                 }
-                passwordRef?.focus();
+                passwordRef.current?.focus();
               }
             }}
           />
@@ -132,12 +127,10 @@ export default function Login() {
             color={err.password ? "red" : undefined}
             type="password"
             value={password}
-            ref={(ref) => {
-              passwordRef = ref;
-            }}
-            onChange={(event) => {
+            ref={passwordRef}
+            onChange={(e) => {
               setErr({});
-              setPassword(event.target.value);
+              setPassword(e.target.value);
             }}
             onKeyUp={(e) => {
               if (e.key === "Enter") {
@@ -159,6 +152,7 @@ export default function Login() {
             {err.login}
           </Text>
         )}
+
         <Box height="4" />
 
         {/* Login button */}
@@ -173,6 +167,7 @@ export default function Login() {
           <EnterIcon />
         </Button>
 
+        {/* Spinner */}
         <Flex
           align="center"
           justify="center"

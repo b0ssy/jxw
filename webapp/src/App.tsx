@@ -22,12 +22,15 @@ function App() {
         <Backend baseUrl={ENV.VITE_PROXY_BACKEND} accessToken={accessToken}>
           <BrowserRouter>
             <Routes>
+              {/* Routes when logged in */}
               {isLoggedIn && (
                 <>
                   <Route path={ROUTES.home} element={<Home />} />
                   <Route path="*" element={<Navigate to={ROUTES.home} />} />
                 </>
               )}
+              
+              {/* Routes when logged out */}
               {!isLoggedIn && (
                 <>
                   <Route path={ROUTES.login} element={<Login />} />

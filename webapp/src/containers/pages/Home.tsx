@@ -27,10 +27,10 @@ import { grayDark, tealDark, irisDark } from "@radix-ui/colors";
 import moment from "moment";
 
 import { /**useSelector, */ useDispatch } from "../../redux/store";
-import "./Home.css";
 import { V1ChatsGet200ResponseData } from "../../lib/backend/api";
 import { useBackend } from "../../lib/backend";
 import ChatBubble from "../../components/ChatBubble";
+import "./Home.css";
 
 export type Chat = V1ChatsGet200ResponseData["data"][0];
 
@@ -42,12 +42,13 @@ export default function Home() {
 
   const backend = useBackend();
 
-  const chatWindowRef = useRef<HTMLDivElement | null>(null);
-  const messageInputRef = useRef<HTMLInputElement | null>(null);
   const [refreshChats, setRefreshChats] = useState(Date.now());
   const [message, setMessage] = useState("");
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [chats, setChats] = useState<V1ChatsGet200ResponseData | null>(null);
+
+  const chatWindowRef = useRef<HTMLDivElement | null>(null);
+  const messageInputRef = useRef<HTMLInputElement | null>(null);
 
   const activeChatId = activeChat?._id;
   const activeChatStatus = activeChat?.status;
@@ -137,6 +138,7 @@ export default function Home() {
     };
   }, [backend, activeChatId, activeChatStatus]);
 
+  // Create new chat
   function newChat() {
     setMessage("");
     setActiveChat(null);
@@ -145,6 +147,7 @@ export default function Home() {
     messageInputRef.current?.focus();
   }
 
+  // Select chat
   function selectChat(chat: Chat) {
     setActiveChat(chat);
 
@@ -169,6 +172,7 @@ export default function Home() {
     }, 100);
   }
 
+  // Send chat message
   async function sendMessage() {
     if (!message) {
       return;
@@ -206,6 +210,7 @@ export default function Home() {
     setActiveChat(res.data.data);
   }
 
+  // Delete chat
   async function deleteChat(id: string) {
     await backend.createChatApi().v1ChatsIdDelete({ id });
     setRefreshChats(Date.now());
@@ -233,11 +238,10 @@ export default function Home() {
 
   return (
     <Flex direction="row" style={{ height: "100vh" }}>
-      {/* Chat panel */}
-      <div
+      {/* Chat left panel */}
+      <Flex
+        direction="column"
         style={{
-          display: "flex",
-          flexDirection: "column",
           width: "250px",
           height: "100%",
           padding: "8px",
@@ -245,24 +249,11 @@ export default function Home() {
         }}
       >
         {/* Actions */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <Button
-            variant="soft"
-            size="3"
-            style={{ flexGrow: "1" }}
-            onClick={newChat}
-          >
-            <PlusIcon />
-            New chat
-            <Flex grow="1" />
-          </Button>
-        </div>
+        <Button variant="soft" size="3" onClick={newChat}>
+          <PlusIcon />
+          New chat
+          <Flex grow="1" />
+        </Button>
 
         {/* Chats */}
         <Flex
@@ -271,19 +262,17 @@ export default function Home() {
           justify={!chats?.data.length ? "center" : undefined}
           grow="1"
           my="2"
-          style={{
-            overflowY: "auto",
-          }}
+          style={{ overflowY: "auto" }}
         >
           {chats?.data.map((chat) => {
-            const firstMessage = chat.messages.length
+            const firstMessageContent = chat.messages.length
               ? chat.messages[0].content
               : "No message available";
             return (
               <Card
                 key={chat._id}
                 variant={activeChat?._id === chat._id ? "surface" : "ghost"}
-                title={firstMessage}
+                title={firstMessageContent}
                 style={{
                   margin: "2px 0",
                   cursor: "pointer",
@@ -302,7 +291,7 @@ export default function Home() {
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {firstMessage}
+                    {firstMessageContent}
                   </Text>
                   <AlertDialog.Root>
                     <AlertDialog.Trigger>
@@ -321,7 +310,7 @@ export default function Home() {
                     <AlertDialog.Content style={{ maxWidth: 450 }}>
                       <AlertDialog.Title>Delete Chat</AlertDialog.Title>
                       <AlertDialog.Description size="2">
-                        <Em>{firstMessage}</Em>
+                        <Em>{firstMessageContent}</Em>
                         <br />
                         <br />
                         Are you sure you want to delete the chat above?
@@ -359,6 +348,7 @@ export default function Home() {
           )}
         </Flex>
 
+        {/* Bottom panel */}
         <Flex gap="2" style={{ marginBottom: "8px" }}>
           {/* Theme */}
           {/* Disabled for now: don't want to waste time fine-tuning colors */}
@@ -367,7 +357,7 @@ export default function Home() {
             {themeMode === "dark" && <MoonIcon />}
           </IconButton> */}
 
-          {/* Account */}
+          {/* Account menu */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
               <Button variant="outline" size="3" style={{ flexGrow: "1" }}>
@@ -377,17 +367,17 @@ export default function Home() {
                 <CaretUpIcon />
               </Button>
             </DropdownMenu.Trigger>
-            <DropdownMenu.Content
-              style={{
-                // width: "186px",
-                width: "234px",
-              }}
-            >
+
+            <DropdownMenu.Content style={{ width: "232px" }}>
+              {/* Open GitHub tab */}
               <DropdownMenu.Item onClick={openGitHub}>
                 GitHub
                 <GitHubLogoIcon />
               </DropdownMenu.Item>
+
               <DropdownMenu.Separator />
+
+              {/* Logout */}
               <DropdownMenu.Item color="red" onClick={logout}>
                 Logout
                 <ExitIcon />
@@ -395,196 +385,173 @@ export default function Home() {
             </DropdownMenu.Content>
           </DropdownMenu.Root>
         </Flex>
-      </div>
+      </Flex>
 
       {/* Chat window */}
-      <div
+      <Flex
+        ref={chatWindowRef}
+        direction="column"
+        grow="1"
+        align="center"
+        justify="center"
+        width="100%"
+        height="100%"
         style={{
-          flexGrow: 1,
-          height: "100%",
+          paddingTop: "50px",
+          overflowY: "auto",
         }}
       >
         <div
-          ref={(ref) => {
-            chatWindowRef.current = ref;
-          }}
           style={{
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
+            width: "768px",
             height: "100%",
-            paddingTop: "50px",
-            alignItems: "center",
-            justifyContent: "center",
-            overflowY: "auto",
           }}
         >
-          <div
-            style={{
-              width: "768px",
-              height: "100%",
-            }}
-          >
-            {/* Messages */}
-            {activeChat?.messages.length && (
-              <>
-                <div
-                  style={{
-                    padding: "0 16px",
-                  }}
-                >
-                  {activeChat?.messages.map((message, index) => {
-                    if (
-                      message.role !== "assistant" &&
-                      message.role !== "user"
-                    ) {
-                      return null;
-                    }
-                    const now = moment();
-                    const date = moment(message.date);
-                    const dateStr = `${
-                      // today
-                      +now.clone().startOf("day") ===
-                      +date.clone().startOf("day")
-                        ? " "
-                        : // yesterday
-                        +now.clone().subtract(1, "day").startOf("day") ===
-                          +date.clone().startOf("day")
-                        ? "yesterday, "
-                        : `${date.format("D MMM YY")}, `
-                    }${date.format("h:mm a")}`;
-                    return (
-                      <Flex
-                        key={index}
-                        justify={message.role === "assistant" ? "start" : "end"}
+          {/* Messages */}
+          {activeChat?.messages.length && (
+            <>
+              <div style={{ padding: "0 16px" }}>
+                {activeChat?.messages.map((message, index) => {
+                  if (message.role !== "assistant" && message.role !== "user") {
+                    return null;
+                  }
+                  const now = moment();
+                  const date = moment(message.date);
+                  const dateStr = `${
+                    // today
+                    +now.clone().startOf("day") === +date.clone().startOf("day")
+                      ? " "
+                      : // yesterday
+                      +now.clone().subtract(1, "day").startOf("day") ===
+                        +date.clone().startOf("day")
+                      ? "yesterday, "
+                      : `${date.format("D MMM YY")}, `
+                  }${date.format("h:mm a")}`;
+                  return (
+                    <Flex
+                      key={index}
+                      justify={message.role === "assistant" ? "start" : "end"}
+                    >
+                      <Card
+                        my="2"
+                        style={{
+                          backgroundColor:
+                            message.role === "assistant"
+                              ? tealDark.teal4
+                              : irisDark.iris4,
+                        }}
                       >
-                        <Card
-                          my="2"
-                          style={{
-                            backgroundColor:
-                              message.role === "assistant"
-                                ? tealDark.teal4
-                                : irisDark.iris4,
-                          }}
+                        <Flex
+                          direction="column"
+                          align={message.role === "assistant" ? "start" : "end"}
                         >
-                          <Flex
-                            direction="column"
-                            align={
-                              message.role === "assistant" ? "start" : "end"
-                            }
-                          >
-                            {message.content
-                              .split("\n")
-                              .map((sentence, index) => (
-                                <div key={index}>{sentence}</div>
-                              ))}
-                          </Flex>
-                          <div style={{ height: "4px" }} />
-                          <Flex
-                            direction="column"
-                            align={
-                              message.role === "assistant" ? "start" : "end"
-                            }
-                          >
-                            <Text size="1" color="gray">
-                              {dateStr}
-                            </Text>
-                          </Flex>
-                        </Card>
-                      </Flex>
-                    );
-                  })}
-                </div>
-                {activeChat?.status === "running" && <ChatBubble />}
-                <div style={{ height: "200px" }} />
-              </>
-            )}
+                          {message.content
+                            .split("\n")
+                            .map((sentence, index) => (
+                              <div key={index}>{sentence}</div>
+                            ))}
+                        </Flex>
+                        <div style={{ height: "4px" }} />
+                        <Flex
+                          direction="column"
+                          align={message.role === "assistant" ? "start" : "end"}
+                        >
+                          <Text size="1" color="gray">
+                            {dateStr}
+                          </Text>
+                        </Flex>
+                      </Card>
+                    </Flex>
+                  );
+                })}
+              </div>
+              {activeChat?.status === "running" && <ChatBubble />}
 
-            {/* Empty message placeholder */}
-            {chats && !activeChat?.messages.length && (
-              <Flex
-                direction="column"
-                align="center"
-                justify="center"
-                gap="4"
-                style={{
-                  height: "100%",
-                }}
-              >
-                <Text size="4" color="gray">
-                  Start chatting with our digital marketing advisor!
-                </Text>
-                <ArrowDownIcon width="72px" height="72px" color="gray" />
-              </Flex>
-            )}
+              {/* Empty bottom placeholder */}
+              <div style={{ height: "200px" }} />
+            </>
+          )}
 
-            {/* Blur effect */}
+          {/* Empty message placeholder */}
+          {chats && !activeChat?.messages.length && (
             <Flex
-              position="fixed"
-              grow="1"
-              width="100%"
+              direction="column"
               align="center"
+              justify="center"
+              gap="4"
               style={{
-                width: "calc(768px + 32px)",
-                height: "150px",
-                marginLeft: "-16px",
-                marginRight: "-16px",
-                bottom: "0",
-                backgroundColor: grayDark.gray1,
-                filter: "blur(12px)",
-              }}
-            />
-
-            {/* Message box */}
-            <Flex
-              position="fixed"
-              grow="1"
-              width="100%"
-              align="center"
-              style={{
-                width: "768px",
-                height: "100px",
-                paddingBottom: "50px",
-                bottom: "0",
-                backgroundColor: grayDark.gray1,
+                height: "100%",
               }}
             >
-              <TextField.Root style={{ width: "100%" }}>
-                <TextField.Input
-                  ref={(ref) => {
-                    messageInputRef.current = ref;
-                  }}
-                  size="3"
-                  autoFocus
-                  disabled={activeChat?.status === "running"}
-                  placeholder={
-                    activeChat?.status === "running"
-                      ? "Waiting for reply..."
-                      : "Send a message"
-                  }
-                  value={message}
-                  style={{
-                    padding: "24px 16px",
-                  }}
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                  }}
-                  onKeyUp={(e) => {
-                    if (e.key === "Enter" && message) {
-                      sendMessage();
-                    }
-                  }}
-                />
-                <TextField.Slot style={{ marginRight: "8px" }}>
-                  <IconButton disabled={!message}>
-                    <PaperPlaneIcon />
-                  </IconButton>
-                </TextField.Slot>
-              </TextField.Root>
+              <Text size="4" color="gray">
+                Start chatting with our digital marketing advisor!
+              </Text>
+              <ArrowDownIcon width="72px" height="72px" color="gray" />
             </Flex>
-          </div>
+          )}
+
+          {/* Blur effect */}
+          <Flex
+            position="fixed"
+            grow="1"
+            width="100%"
+            align="center"
+            style={{
+              width: "calc(768px + 32px)",
+              height: "150px",
+              marginLeft: "-16px",
+              marginRight: "-16px",
+              bottom: "0",
+              backgroundColor: grayDark.gray1,
+              filter: "blur(12px)",
+            }}
+          />
+
+          {/* Message box */}
+          <Flex
+            position="fixed"
+            grow="1"
+            width="100%"
+            align="center"
+            style={{
+              bottom: "0",
+              width: "768px",
+              height: "100px",
+              paddingBottom: "50px",
+              backgroundColor: grayDark.gray1,
+            }}
+          >
+            <TextField.Root style={{ width: "100%" }}>
+              <TextField.Input
+                ref={messageInputRef}
+                size="3"
+                autoFocus
+                disabled={activeChat?.status === "running"}
+                placeholder={
+                  activeChat?.status === "running"
+                    ? "Waiting for reply..."
+                    : "Send a message"
+                }
+                value={message}
+                style={{ padding: "24px 16px" }}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                }}
+                onKeyUp={(e) => {
+                  if (e.key === "Enter" && message) {
+                    sendMessage();
+                  }
+                }}
+              />
+              <TextField.Slot style={{ marginRight: "8px" }}>
+                <IconButton disabled={!message}>
+                  <PaperPlaneIcon />
+                </IconButton>
+              </TextField.Slot>
+            </TextField.Root>
+          </Flex>
         </div>
-      </div>
+      </Flex>
     </Flex>
   );
 }
