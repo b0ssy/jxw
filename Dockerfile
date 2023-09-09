@@ -5,12 +5,15 @@ FROM node:18.17.1-alpine
 WORKDIR /opt/backend
 
 # Add package.json and install node modules for production only
-COPY package.json /opt/backend/package.json
+COPY backend/package.json /opt/backend/package.json
 RUN npm i --omit=dev
 
 # Add files
-ADD build/src /opt/backend/src
-COPY build/index.js /opt/backend/index.js
+ADD backend/build/src /opt/backend/src
+COPY backend/build/index.js /opt/backend/index.js
+
+# Add webapp files
+ADD webapp/dist /opt/webapp/dist
 
 # Expose server
 EXPOSE 8080
