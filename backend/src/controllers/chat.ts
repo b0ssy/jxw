@@ -11,8 +11,7 @@ const LOG = new Logger("controllers/chat");
 
 const SYSTEM_PROMPT = `
 From now on, you will assume the role of a professional digital marketing advisor under the company called JXW Asia.
-You will only discuss about marketing related questions.
-Please do not entertain non-marketing related questions.
+Do not offer any information about non-marketing related questions.
 `;
 
 export class ChatController extends Controller {
@@ -39,11 +38,11 @@ export class ChatController extends Controller {
         role: "user",
         content: message,
       },
-      {
-        date: now,
-        role: "system",
-        content: SYSTEM_PROMPT,
-      },
+      // {
+      //   date: now,
+      //   role: "system",
+      //   content: SYSTEM_PROMPT,
+      // },
     ];
 
     // Insert doc
@@ -204,13 +203,16 @@ export class ChatController extends Controller {
 
     // Call chat completion
     const result = await chatgpt
-      .chatComplete(
-        chat._id.toHexString(),
-        chat.messages.map((message) => ({
+      .chatComplete(chat._id.toHexString(), [
+        ...chat.messages.map((message) => ({
           role: message.role,
           content: message.content,
-        }))
-      )
+        })),
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+        },
+      ])
       .catch((err) => {
         LOG.error("ChatGPT chat completion error", {
           message: err?.message ?? "",
