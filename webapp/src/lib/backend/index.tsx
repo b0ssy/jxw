@@ -24,7 +24,7 @@ export function Backend(props: BackendProps) {
       axiosInstance.interceptors.request.use((config) => {
         // Remove url double slash prefix
         // This is to fix the bug where base url === "/" causing redirect to localhost
-        if (config.url?.startsWith('//')) {
+        if (config.url?.startsWith("//")) {
           config.url = config.url.slice(1);
         }
 
@@ -70,7 +70,7 @@ export function Backend(props: BackendProps) {
 
 // Hook to access backend related data
 export function useBackend() {
-  const { baseUrl, createAxiosInstance, createApiConfiguration } =
+  const { createAxiosInstance, createApiConfiguration } =
     useContext(BackendContext);
 
   // Create auth api
@@ -91,22 +91,12 @@ export function useBackend() {
     );
   }, [createApiConfiguration, createAxiosInstance]);
 
-  // Check if server is healthy
-  const isHealthy = useCallback(async () => {
-    if (!baseUrl) {
-      return false;
-    }
-    const res = await axios.get(`${baseUrl}/health`).catch(() => null);
-    return res?.status === 204;
-  }, [baseUrl]);
-
   return useMemo(
     () => ({
       createAuthApi,
       createChatApi,
-      isHealthy,
     }),
-    [createAuthApi, createChatApi, isHealthy]
+    [createAuthApi, createChatApi]
   );
 }
 

@@ -199,27 +199,3 @@ export const decodeJWTPayload = (accessToken: string): JWTPayload => {
     }
   }
 };
-
-// Authorize user
-export const authorize =
-  (options: { onCheckSession?: (session: Session) => void }) =>
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      // decodeSession() should already be called before
-      if (!res.locals["session"]) {
-        throw new NotAuthorizedError();
-      }
-      const session: Session = res.locals["session"];
-
-      const { onCheckSession } = options;
-
-      // Custom callback to check session
-      if (onCheckSession) {
-        onCheckSession(session);
-      }
-
-      next();
-    } catch (err) {
-      next(err);
-    }
-  };
