@@ -523,7 +523,7 @@ export default function Home() {
                 }}
               />
               <TextField.Slot>
-                <IconButton disabled={!message}>
+                <IconButton disabled={!message} onClick={sendMessage}>
                   <PaperPlaneIcon />
                 </IconButton>
               </TextField.Slot>
