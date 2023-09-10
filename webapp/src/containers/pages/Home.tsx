@@ -9,6 +9,7 @@ import {
   Text,
   TextField,
   Em,
+  Separator,
 } from "@radix-ui/themes";
 import {
   PlusIcon,
@@ -20,8 +21,10 @@ import {
   ArrowDownIcon,
   PersonIcon,
   CaretUpIcon,
+  CaretDownIcon,
   GitHubLogoIcon,
   ExitIcon,
+  HamburgerMenuIcon,
 } from "@radix-ui/react-icons";
 import { tealDark, irisDark } from "@radix-ui/colors";
 import moment from "moment";
@@ -42,6 +45,7 @@ export default function Home() {
 
   const backend = useBackend();
 
+  const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
   const [refreshChats, setRefreshChats] = useState(Date.now());
   const [message, setMessage] = useState("");
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
@@ -237,7 +241,7 @@ export default function Home() {
     <Flex className="Home-root" direction="row">
       {/* Chat left panel */}
       <Flex className="Home-left-panel" direction="column">
-        {/* Actions */}
+        {/* New chat */}
         <Button variant="soft" size="3" onClick={newChat}>
           <PlusIcon />
           New chat
@@ -336,7 +340,7 @@ export default function Home() {
           )}
         </Flex>
 
-        {/* Bottom panel */}
+        {/* Settings panel */}
         <Flex className="Home-settings-panel" gap="2">
           {/* Theme */}
           {/* Disabled for now: don't want to waste time fine-tuning colors */}
@@ -384,7 +388,6 @@ export default function Home() {
         ref={chatWindowRef}
         className="Home-chat-window"
         direction="column"
-        grow="1"
         align="center"
         justify="center"
         width="100%"
@@ -461,7 +464,7 @@ export default function Home() {
               {activeChat?.status === "running" && <ChatBubble />}
 
               {/* Empty bottom placeholder */}
-              <div style={{ height: "200px" }} />
+              <div className="Home-chat-window-message-placeholder" />
             </>
           )}
 
@@ -528,6 +531,160 @@ export default function Home() {
           </Flex>
         </div>
       </Flex>
+
+      {/* Chat header (mobile only) */}
+      <Flex direction="column" className="Home-mobile-header">
+        <Flex grow="1" align="center">
+          <IconButton
+            variant="ghost"
+            size="2"
+            onClick={() => setOpenMobileDrawer(!openMobileDrawer)}
+          >
+            <HamburgerMenuIcon width="20px" height="20px" />
+          </IconButton>
+
+          <div style={{ width: "16px" }} />
+
+          {/* New chat */}
+          <Button variant="soft" size="2" onClick={newChat}>
+            <PlusIcon />
+            New chat
+            <Flex grow="1" />
+          </Button>
+
+          <Flex grow="1" />
+
+          {/* Account menu */}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <Button variant="outline" size="2">
+                <PersonIcon />
+                Account
+                <CaretDownIcon />
+              </Button>
+            </DropdownMenu.Trigger>
+
+            <DropdownMenu.Content className="Home-account-menu">
+              {/* Open GitHub tab */}
+              <DropdownMenu.Item onClick={openGitHub}>
+                GitHub
+                <GitHubLogoIcon />
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Separator />
+
+              {/* Logout */}
+              <DropdownMenu.Item color="red" onClick={logout}>
+                Logout
+                <ExitIcon />
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </Flex>
+        <Separator size="4" />
+      </Flex>
+
+      {/* Chat left drawer (mobile only) */}
+      {openMobileDrawer && (
+        <Flex className="Home-mobile-left-drawer">
+          {/* Chats */}
+          <Flex
+            className="Home-chats"
+            direction="column"
+            align={!chats?.data.length ? "center" : undefined}
+            justify={!chats?.data.length ? "center" : undefined}
+            grow="1"
+            my="2"
+          >
+            {chats?.data.map((chat) => {
+              const firstMessageContent = chat.messages.length
+                ? chat.messages[0].content
+                : "No message available";
+              return (
+                <Card
+                  key={chat._id}
+                  className="Home-chats-message"
+                  variant={activeChat?._id === chat._id ? "surface" : "ghost"}
+                  title={firstMessageContent}
+                  onClick={() => {
+                    selectChat(chat);
+                    setOpenMobileDrawer(false);
+                  }}
+                >
+                  <Flex gap="2" align="center">
+                    <Text
+                      className="Home-chats-message-text"
+                      as="div"
+                      size="2"
+                      weight={activeChat?._id === chat._id ? "bold" : undefined}
+                    >
+                      {firstMessageContent}
+                    </Text>
+
+                    {/* Delete chat dialog */}
+                    <AlertDialog.Root>
+                      <AlertDialog.Trigger>
+                        <IconButton
+                          variant="soft"
+                          color="red"
+                          size="1"
+                          style={{
+                            visibility:
+                              activeChat?._id !== chat._id
+                                ? "hidden"
+                                : undefined,
+                          }}
+                        >
+                          <TrashIcon />
+                        </IconButton>
+                      </AlertDialog.Trigger>
+
+                      {/* Dialog content */}
+                      <AlertDialog.Content style={{ maxWidth: 450 }}>
+                        <AlertDialog.Title>Delete Chat</AlertDialog.Title>
+                        <AlertDialog.Description size="2">
+                          <Em>{firstMessageContent}</Em>
+                          <br />
+                          <br />
+                          Are you sure you want to delete the chat above?
+                        </AlertDialog.Description>
+                        <Flex gap="3" mt="4" justify="end">
+                          {/* Cancel deletion */}
+                          <AlertDialog.Cancel>
+                            <Button variant="soft" color="gray">
+                              Cancel
+                            </Button>
+                          </AlertDialog.Cancel>
+
+                          {/* Delete button */}
+                          <AlertDialog.Action>
+                            <Button
+                              variant="solid"
+                              color="red"
+                              onClick={() => {
+                                deleteChat(chat._id);
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </AlertDialog.Action>
+                        </Flex>
+                      </AlertDialog.Content>
+                    </AlertDialog.Root>
+                  </Flex>
+                </Card>
+              );
+            })}
+            {chats && !chats.data.length && (
+              <>
+                <ChatBubbleIcon width="72px" height="72px" color="gray" />
+                <div style={{ height: "16px" }} />
+                <Text color="gray">You have no chats yet</Text>
+              </>
+            )}
+          </Flex>
+        </Flex>
+      )}
     </Flex>
   );
 }

@@ -5,10 +5,18 @@
 }
 
 .Home-left-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 250px;
   height: 100%;
   padding: 8px;
   background-color: var(--gray-3);
+}
+@media only screen and (max-width: 1024px) {
+  .Home-left-panel {
+    display: none;
+  }
 }
 
 .Home-chats {
@@ -37,38 +45,103 @@
 
 .Home-chat-window {
   padding-top: 50px;
+  padding-left: 250px;
   overflow-y: auto;
 }
+@media only screen and (max-width: 1024px) {
+  .Home-chat-window {
+    padding-left: 0;
+  }
+}
 .Home-chat-window > div {
-  width: 768px;
+  width: 100%;
+  max-width: 768px;
   height: 100%;
 }
 .Home-chat-window-message-container {
   padding: 0 16px;
 }
 .Home-chat-window-message-placeholder {
-  height: 200px;
+  height: 150px;
+}
+@media only screen and (max-width: 1024px) {
+  .Home-chat-window-message-placeholder {
+    height: 116px;
+  }
 }
 .Home-chat-window-blur-effect {
   bottom: 0;
-  width: calc(768px + 32px);
+  width: calc(100% + 32px);
+  max-width: calc(768px + 32px);
   height: 150px;
   margin-left: -16px;
   margin-right: -16px;
   background-color: var(--gray-1);
   filter: blur(12px);
 }
+@media only screen and (max-width: 1024px) {
+  .Home-chat-window-blur-effect {
+    height: 116px;
+  }
+}
 
 .Home-message-box {
   bottom: 0;
-  width: 768px;
+  width: 100%;
+  max-width: 768px;
   height: 100px;
   padding-bottom: 50px;
   background-color: var(--gray-1);
 }
+@media only screen and (max-width: 1024px) {
+  .Home-message-box {
+    height: 66px;
+    padding-bottom: 16px;
+  }
+}
 .Home-message-box > .rt-TextFieldRoot {
   width: 100%;
+  margin-left: 16px;
+  margin-right: 16px;
 }
 .Home-message-box > .rt-TextFieldRoot > input {
   padding: 24px 16px;
+}
+
+.Home-mobile-header {
+  display: none;
+}
+@media only screen and (max-width: 1024px) {
+  .Home-mobile-header {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 48px;
+    background-color: var(--gray-1);
+  }
+
+  .Home-mobile-header > div {
+    padding: 0 16px;
+  }
+}
+
+.Home-mobile-left-drawer {
+  display: none;
+}
+@media only screen and (max-width: 1024px) {
+  .Home-mobile-left-drawer {
+    display: flex;
+    position: fixed;
+    top: 48px;
+    left: 0;
+    width: 250px;
+    height: calc(100% - 48px);
+    background-color: var(--gray-3);
+  }
+
+  .Home-mobile-left-drawer > div {
+    padding: 0 8px;
+  }
 }

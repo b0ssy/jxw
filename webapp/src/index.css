@@ -22,6 +22,7 @@
 
 html, body, #root {
   margin: 0;
-  height: 100%;
   width: 100%;
+  min-width: 416px;
+  height: 100%;
 }
