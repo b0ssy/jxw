@@ -19,12 +19,22 @@ export function Backend(props: BackendProps) {
     (options?: { ignoreAccessToken?: boolean }) => {
       const axiosInstance = axios.create();
       const accessToken = props.accessToken;
-      if (!options?.ignoreAccessToken && accessToken) {
-        axiosInstance.interceptors.request.use((config) => {
+
+      // Intercept request
+      axiosInstance.interceptors.request.use((config) => {
+        // Remove url double slash prefix
+        // This is to fix the bug where base url === "/" causing redirect to localhost
+        if (config.url?.startsWith('//')) {
+          config.url = config.url.slice(1);
+        }
+
+        // Inject access token
+        if (!options?.ignoreAccessToken && accessToken) {
           config.headers.Authorization = `Bearer ${accessToken}`;
-          return config;
-        });
-      }
+        }
+        return config;
+      });
+
       return axiosInstance;
     },
     [props.accessToken]

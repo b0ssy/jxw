@@ -18,8 +18,7 @@ function App() {
     <>
       {/* UI */}
       <Theme appearance={themeMode} style={{ height: "100vh" }}>
-        {/* Bug: Cannot use ENV.BASE_URL */}
-        <Backend baseUrl={ENV.VITE_PROXY_BACKEND} accessToken={accessToken}>
+        <Backend baseUrl={ENV.BASE_URL} accessToken={accessToken}>
           <BrowserRouter>
             <Routes>
               {/* Routes when logged in */}
