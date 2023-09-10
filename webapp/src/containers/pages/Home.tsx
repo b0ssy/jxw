@@ -180,17 +180,6 @@ export default function Home() {
     // Clear message
     setMessage("");
 
-    // Scroll to bottom
-    // Trigger a while later to ensure message is rendered
-    setTimeout(() => {
-      if (chatWindowRef.current) {
-        chatWindowRef.current.scrollBy({
-          top: chatWindowRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-      }
-    }, 100);
-
     // Create new chat
     if (!activeChat) {
       // Get chat message and set as active chat
@@ -207,6 +196,17 @@ export default function Home() {
       id: activeChat._id,
       v1ChatsIdMessagePostRequestBody: { message },
     });
+
+    // Scroll to bottom
+    // Trigger a while later to ensure message is rendered
+    setTimeout(() => {
+      if (chatWindowRef.current) {
+        chatWindowRef.current.scrollBy({
+          top: chatWindowRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
   }
 
   // Delete chat
