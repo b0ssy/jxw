@@ -585,106 +585,105 @@ export default function Home() {
       </Flex>
 
       {/* Chat left drawer (mobile only) */}
-      {openMobileDrawer && (
-        <Flex className="Home-mobile-left-drawer">
-          {/* Chats */}
-          <Flex
-            className="Home-chats"
-            direction="column"
-            align={!chats?.data.length ? "center" : undefined}
-            justify={!chats?.data.length ? "center" : undefined}
-            grow="1"
-            my="2"
-          >
-            {chats?.data.map((chat) => {
-              const firstMessageContent = chat.messages.length
-                ? chat.messages[0].content
-                : "No message available";
-              return (
-                <Card
-                  key={chat._id}
-                  className="Home-chats-message"
-                  variant={activeChat?._id === chat._id ? "surface" : "ghost"}
-                  title={firstMessageContent}
-                  onClick={() => {
-                    selectChat(chat);
-                    setOpenMobileDrawer(false);
-                  }}
-                >
-                  <Flex gap="2" align="center">
-                    <Text
-                      className="Home-chats-message-text"
-                      as="div"
-                      size="2"
-                      weight={activeChat?._id === chat._id ? "bold" : undefined}
-                    >
-                      {firstMessageContent}
-                    </Text>
+      <Flex
+        className="Home-mobile-left-drawer"
+        style={{ display: !openMobileDrawer ? "none" : undefined }}
+      >
+        {/* Chats */}
+        <Flex
+          className="Home-chats"
+          direction="column"
+          align={!chats?.data.length ? "center" : undefined}
+          justify={!chats?.data.length ? "center" : undefined}
+          grow="1"
+          my="2"
+        >
+          {chats?.data.map((chat) => {
+            const firstMessageContent = chat.messages.length
+              ? chat.messages[0].content
+              : "No message available";
+            return (
+              <Card
+                key={chat._id}
+                className="Home-chats-message"
+                variant={activeChat?._id === chat._id ? "surface" : "ghost"}
+                title={firstMessageContent}
+                onClick={() => {
+                  selectChat(chat);
+                  setOpenMobileDrawer(false);
+                }}
+              >
+                <Flex gap="2" align="center">
+                  <Text
+                    className="Home-chats-message-text"
+                    as="div"
+                    size="2"
+                    weight={activeChat?._id === chat._id ? "bold" : undefined}
+                  >
+                    {firstMessageContent}
+                  </Text>
 
-                    {/* Delete chat dialog */}
-                    <AlertDialog.Root>
-                      <AlertDialog.Trigger>
-                        <IconButton
-                          variant="soft"
-                          color="red"
-                          size="1"
-                          style={{
-                            visibility:
-                              activeChat?._id !== chat._id
-                                ? "hidden"
-                                : undefined,
-                          }}
-                        >
-                          <TrashIcon />
-                        </IconButton>
-                      </AlertDialog.Trigger>
+                  {/* Delete chat dialog */}
+                  <AlertDialog.Root>
+                    <AlertDialog.Trigger>
+                      <IconButton
+                        variant="soft"
+                        color="red"
+                        size="1"
+                        style={{
+                          visibility:
+                            activeChat?._id !== chat._id ? "hidden" : undefined,
+                        }}
+                      >
+                        <TrashIcon />
+                      </IconButton>
+                    </AlertDialog.Trigger>
 
-                      {/* Dialog content */}
-                      <AlertDialog.Content style={{ maxWidth: 450 }}>
-                        <AlertDialog.Title>Delete Chat</AlertDialog.Title>
-                        <AlertDialog.Description size="2">
-                          <Em>{firstMessageContent}</Em>
-                          <br />
-                          <br />
-                          Are you sure you want to delete the chat above?
-                        </AlertDialog.Description>
-                        <Flex gap="3" mt="4" justify="end">
-                          {/* Cancel deletion */}
-                          <AlertDialog.Cancel>
-                            <Button variant="soft" color="gray">
-                              Cancel
-                            </Button>
-                          </AlertDialog.Cancel>
+                    {/* Dialog content */}
+                    <AlertDialog.Content style={{ maxWidth: 450 }}>
+                      <AlertDialog.Title>Delete Chat</AlertDialog.Title>
+                      <AlertDialog.Description size="2">
+                        <Em>{firstMessageContent}</Em>
+                        <br />
+                        <br />
+                        Are you sure you want to delete the chat above?
+                      </AlertDialog.Description>
+                      <Flex gap="3" mt="4" justify="end">
+                        {/* Cancel deletion */}
+                        <AlertDialog.Cancel>
+                          <Button variant="soft" color="gray">
+                            Cancel
+                          </Button>
+                        </AlertDialog.Cancel>
 
-                          {/* Delete button */}
-                          <AlertDialog.Action>
-                            <Button
-                              variant="solid"
-                              color="red"
-                              onClick={() => {
-                                deleteChat(chat._id);
-                              }}
-                            >
-                              Delete
-                            </Button>
-                          </AlertDialog.Action>
-                        </Flex>
-                      </AlertDialog.Content>
-                    </AlertDialog.Root>
-                  </Flex>
-                </Card>
-              );
-            })}
-            {chats && !chats.data.length && (
-              <>
-                <ChatBubbleIcon width="72px" height="72px" color="gray" />
-                <div style={{ height: "16px" }} />
-                <Text color="gray">You have no chats yet</Text>
-              </>
-            )}
-          </Flex>
+                        {/* Delete button */}
+                        <AlertDialog.Action>
+                          <Button
+                            variant="solid"
+                            color="red"
+                            onClick={() => {
+                              deleteChat(chat._id);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </AlertDialog.Action>
+                      </Flex>
+                    </AlertDialog.Content>
+                  </AlertDialog.Root>
+                </Flex>
+              </Card>
+            );
+          })}
+          {chats && !chats.data.length && (
+            <>
+              <ChatBubbleIcon width="72px" height="72px" color="gray" />
+              <div style={{ height: "16px" }} />
+              <Text color="gray">You have no chats yet</Text>
+            </>
+          )}
         </Flex>
-      )}
+      </Flex>
     </Flex>
   );
 }
