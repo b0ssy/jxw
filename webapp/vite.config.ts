@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       proxy: {
         "/v1": env.VITE_PROXY_BACKEND,
+        "/chat": env.VITE_PROXY_BACKEND,
       },
     },
 
