@@ -1,6 +1,7 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { IncomingMessage, Server } from "http";
 import { ObjectId } from "mongodb";
+import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 
 import db, { zChat } from "./db";
@@ -115,12 +116,47 @@ export class ChatServer {
         );
       }
 
-      // Create and store client
+      // Connection state might change here
+      // So if it turned to closing/closed, then no point continue
+      if (
+        connection.readyState === WebSocket.CLOSING ||
+        connection.readyState === WebSocket.CLOSED
+      ) {
+        return;
+      }
+
+      // Generate a unique ID for this client connection
+      const connectionId = uuidv4();
+
+      // Create and store client connection
       const session = new Session({ accessToken, jwtPayload });
       const chatController = new ChatController({ session });
-      const client: Client = { connection, session, chatId, chatController };
+      const client: Client = {
+        connectionId,
+        connection,
+        session,
+        chatId,
+        chatController,
+      };
       this.clients[chatId] = this.clients[chatId] || [];
       this.clients[chatId].push(client);
+
+      // Remove client connection on close
+      connection.on("close", () => {
+        if (!this.clients[chatId]) {
+          return;
+        }
+        // Find and remove client connection by its ID
+        for (let i = 0; i < this.clients[chatId].length; i++) {
+          if (this.clients[chatId][i].connectionId === connectionId) {
+            this.clients[chatId].splice(i, 1);
+            if (!this.clients[chatId].length) {
+              delete this.clients[chatId];
+            }
+            break;
+          }
+        }
+      });
 
       // Send full chat document initially
       const chat = await chatController.get(chatId);
@@ -139,6 +175,7 @@ export class ChatServer {
 
 // Represents a client connection
 export type Client = {
+  connectionId: string;
   connection: WebSocket;
   session: Session;
   chatId: string;
