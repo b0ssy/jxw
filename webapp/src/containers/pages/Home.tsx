@@ -1,4 +1,5 @@
 import { Fragment, useRef, useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Flex,
   Card,
@@ -35,6 +36,7 @@ import { V1ChatsGet200ResponseData } from "../../lib/backend/api";
 import { ChatClient } from "../../lib/chat-client";
 import { useSelector, useDispatch } from "../../redux/store";
 import "./Home.css";
+import { ROUTES } from "../../routes";
 
 export type Chat = V1ChatsGet200ResponseData["data"][0];
 
@@ -43,39 +45,47 @@ export default function Home() {
   const accessToken = useSelector((state) => state.app.accessToken);
   const dispatch = useDispatch();
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const backend = useBackend();
 
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
-  const [refreshChats, setRefreshChats] = useState(Date.now());
   const [message, setMessage] = useState("");
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [chats, setChats] = useState<V1ChatsGet200ResponseData | null>(null);
+  const [loadingActiveChat, setLoadingActiveChat] = useState(false);
 
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
   const messageInputRef = useRef<HTMLInputElement | null>(null);
 
-  const activeChatId = activeChat?._id;
+  const activeChatId = extractActiveChatId(location.pathname);
 
-  // Query for chats
+  // Query for all chats initially
   useEffect(() => {
     backend
       .createChatApi()
       .v1ChatsGet()
       .then((res) => {
         // Chats should be already sorted by created date in descending order
-        setChats(res.data.data);
+        const chats = res.data.data;
+        setChats(chats);
 
-        // Set first chat as active
-        if (res.data.data.data.length) {
-          setActiveChat((chat) => {
-            // Focus on message box
-            messageInputRef.current?.focus();
+        // If no active chat selected, then set first chat as active
+        const currentActiveChatId = extractActiveChatId(
+          window.location.pathname
+        );
+        if (!currentActiveChatId) {
+          const chat = chats.data[0];
+          setActiveChat(chat);
+          setLoadingActiveChat(true);
+          navigate(`/ui/chat/${chat._id}`);
 
-            return !chat ? res.data.data.data[0] : chat;
-          });
+          // Focus on message box
+          messageInputRef.current?.focus();
         }
       });
-  }, [backend, refreshChats]);
+  }, [backend]);
 
   // Load active chat messages
   useEffect(() => {
@@ -83,19 +93,23 @@ export default function Home() {
       return;
     }
 
+    // Load the active chat
+    setLoadingActiveChat(true);
+
+    // Chat websocket client to get ChatGPT streaming response
     const client = new ChatClient({
       accessToken,
       chatId: activeChatId,
       onReceive: (event) => {
         switch (event.type) {
           // Full chat document
-          case "chat": {
-            const updatedChat = event.data;
-            setActiveChat((chat) =>
-              chat?._id === activeChatId ? updatedChat : null
-            );
-            break;
-          }
+          // case "chat": {
+          //   const updatedChat = event.data;
+          //   setActiveChat((chat) =>
+          //     chat?._id === activeChatId ? updatedChat : null
+          //   );
+          //   break;
+          // }
           // Latest chat response from ChatGPT
           case "chat_content": {
             const content = event.data;
@@ -111,6 +125,7 @@ export default function Home() {
                     content: "",
                   });
                 }
+                chat.status = "running";
                 chat.messages[chat.messages.length - 1].content = content;
               }
               return chat ? { ...chat } : null;
@@ -126,9 +141,6 @@ export default function Home() {
               return chat ? { ...chat } : null;
             });
 
-            // Refresh all chats at end
-            setRefreshChats(Date.now());
-
             // Focus on message box
             // Set timeout to run after it is enabled
             setTimeout(() => {
@@ -142,7 +154,25 @@ export default function Home() {
         }
       },
     });
-    client.connect();
+
+    backend
+      .createChatApi()
+      .v1ChatsIdGet({ id: activeChatId })
+      .then((res) => {
+        // Due to race condition, need to check to ensure chat is still active
+        const currentActiveChatId = extractActiveChatId(
+          window.location.pathname
+        );
+        if (currentActiveChatId === activeChatId) {
+          setActiveChat(res.data.data);
+
+          // Start to connect here
+          client.connect();
+        }
+      })
+      .finally(() => {
+        setLoadingActiveChat(false);
+      });
 
     return () => {
       client.close();
@@ -153,6 +183,7 @@ export default function Home() {
   function newChat() {
     setMessage("");
     setActiveChat(null);
+    navigate(ROUTES.home);
 
     // Focus on message box
     messageInputRef.current?.focus();
@@ -160,16 +191,27 @@ export default function Home() {
 
   // Select chat
   function selectChat(chat: Chat) {
-    setActiveChat(chat);
-
-    // Focus on message box
-    messageInputRef.current?.focus();
-
-    // Chat window might be scrolled to bottom previously
-    // So scroll it back to top here
-    if (chatWindowRef.current) {
-      chatWindowRef.current.scrollTop = 0;
+    if (chat._id === activeChatId) {
+      return;
     }
+
+    // Clear current active chat
+    setActiveChat(null);
+    setLoadingActiveChat(true);
+
+    // Navigate to active chat
+    navigate(`/ui/chat/${chat._id}`);
+
+    // setActiveChat(chat);
+
+    // // Focus on message box
+    // messageInputRef.current?.focus();
+
+    // // Chat window might be scrolled to bottom previously
+    // // So scroll it back to top here
+    // if (chatWindowRef.current) {
+    //   chatWindowRef.current.scrollTop = 0;
+    // }
   }
 
   // Send chat message
@@ -188,12 +230,26 @@ export default function Home() {
       const res = await backend
         .createChatApi()
         .v1ChatsPost({ v1ChatsPostRequestBody: { message } });
-      setActiveChat(res.data.data);
-      setRefreshChats(Date.now());
+
+      const data = [res.data.data, ...(chats ? chats.data : [])];
+      setChats({ count: data.length, data });
+      navigate(`${ROUTES.home}/chat/${res.data.data._id}`);
       return;
     }
 
     // Update new chat message
+    setActiveChat({
+      ...activeChat,
+      status: "running",
+      messages: [
+        ...activeChat.messages,
+        {
+          date: new Date().toISOString(),
+          role: "user",
+          content: message,
+        },
+      ],
+    });
     await backend.createChatApi().v1ChatsIdMessagePost({
       id: activeChat._id,
       v1ChatsIdMessagePostRequestBody: { message },
@@ -212,13 +268,27 @@ export default function Home() {
   }
 
   // Delete chat
-  async function deleteChat(id: string) {
-    await backend.createChatApi().v1ChatsIdDelete({ id });
-    setRefreshChats(Date.now());
+  function deleteChat(id: string) {
+    // Delete chat
+    backend.createChatApi().v1ChatsIdDelete({ id });
 
-    // Clear active chat
-    if (activeChat?._id === id) {
+    // Remove from chats list
+    const data = chats ? chats.data.filter((chat) => chat._id !== id) : [];
+    setChats({ count: data.length, data });
+
+    // If deleted chat is active chat
+    if (activeChatId === id) {
+      // Clear the active chat
       setActiveChat(null);
+
+      // Navigate to the first chat if available
+      if (data.length) {
+        navigate(`${ROUTES.home}/chat/${data[0]._id}`);
+      }
+      // Otherwise, navigate to root
+      else {
+        navigate(ROUTES.home);
+      }
     }
   }
 
@@ -267,7 +337,7 @@ export default function Home() {
               <Card
                 key={chat._id}
                 className="Home-chats-message"
-                variant={activeChat?._id === chat._id ? "surface" : "ghost"}
+                variant={activeChatId === chat._id ? "surface" : "ghost"}
                 title={firstMessageContent}
                 onClick={() => selectChat(chat)}
               >
@@ -276,7 +346,7 @@ export default function Home() {
                     className="Home-chats-message-text"
                     as="div"
                     size="2"
-                    weight={activeChat?._id === chat._id ? "bold" : undefined}
+                    weight={activeChatId === chat._id ? "bold" : undefined}
                   >
                     {firstMessageContent}
                   </Text>
@@ -290,7 +360,7 @@ export default function Home() {
                         size="1"
                         style={{
                           visibility:
-                            activeChat?._id !== chat._id ? "hidden" : undefined,
+                            activeChatId !== chat._id ? "hidden" : undefined,
                         }}
                       >
                         <TrashIcon />
@@ -471,7 +541,7 @@ export default function Home() {
           )}
 
           {/* Empty message placeholder */}
-          {chats && !activeChat?.messages.length && (
+          {chats && !activeChat?.messages.length && !loadingActiveChat && (
             <Flex
               direction="column"
               align="center"
@@ -608,7 +678,7 @@ export default function Home() {
               <Card
                 key={chat._id}
                 className="Home-chats-message"
-                variant={activeChat?._id === chat._id ? "surface" : "ghost"}
+                variant={activeChatId === chat._id ? "surface" : "ghost"}
                 title={firstMessageContent}
                 onClick={() => {
                   selectChat(chat);
@@ -620,7 +690,7 @@ export default function Home() {
                     className="Home-chats-message-text"
                     as="div"
                     size="2"
-                    weight={activeChat?._id === chat._id ? "bold" : undefined}
+                    weight={activeChatId === chat._id ? "bold" : undefined}
                   >
                     {firstMessageContent}
                   </Text>
@@ -634,7 +704,7 @@ export default function Home() {
                         size="1"
                         style={{
                           visibility:
-                            activeChat?._id !== chat._id ? "hidden" : undefined,
+                            activeChatId !== chat._id ? "hidden" : undefined,
                         }}
                       >
                         <TrashIcon />
@@ -688,4 +758,11 @@ export default function Home() {
       </Flex>
     </Flex>
   );
+}
+
+// Extract active chat id from pathname
+function extractActiveChatId(pathname: string) {
+  return pathname.startsWith("/ui/chat/")
+    ? pathname.slice("/ui/chat/".length)
+    : null;
 }
