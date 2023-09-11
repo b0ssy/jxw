@@ -14,8 +14,6 @@ import {
 } from "@radix-ui/themes";
 import {
   PlusIcon,
-  // SunIcon,
-  // MoonIcon,
   ChatBubbleIcon,
   TrashIcon,
   PaperPlaneIcon,
@@ -35,13 +33,12 @@ import { useBackend } from "../../lib/backend";
 import { V1ChatsGet200ResponseData } from "../../lib/backend/api";
 import { ChatClient } from "../../lib/chat-client";
 import { useSelector, useDispatch } from "../../redux/store";
-import "./Home.css";
 import { ROUTES } from "../../routes";
+import "./Home.css";
 
 export type Chat = V1ChatsGet200ResponseData["data"][0];
 
 export default function Home() {
-  // const themeMode = useSelector((state) => state.app.themeMode);
   const accessToken = useSelector((state) => state.app.accessToken);
   const dispatch = useDispatch();
 
@@ -101,15 +98,23 @@ export default function Home() {
       accessToken,
       chatId: activeChatId,
       onReceive: (event) => {
+        // Need to check to ensure chat is still active
+        const currentActiveChatId = extractActiveChatId(
+          window.location.pathname
+        );
+        if (currentActiveChatId !== activeChatId) {
+          return;
+        }
+
+        setLoadingActiveChat(false);
+
         switch (event.type) {
           // Full chat document
-          // case "chat": {
-          //   const updatedChat = event.data;
-          //   setActiveChat((chat) =>
-          //     chat?._id === activeChatId ? updatedChat : null
-          //   );
-          //   break;
-          // }
+          case "chat": {
+            const updatedChat = event.data;
+            setActiveChat(updatedChat);
+            break;
+          }
           // Latest chat response from ChatGPT
           case "chat_content": {
             const content = event.data;
@@ -154,25 +159,7 @@ export default function Home() {
         }
       },
     });
-
-    backend
-      .createChatApi()
-      .v1ChatsIdGet({ id: activeChatId })
-      .then((res) => {
-        // Due to race condition, need to check to ensure chat is still active
-        const currentActiveChatId = extractActiveChatId(
-          window.location.pathname
-        );
-        if (currentActiveChatId === activeChatId) {
-          setActiveChat(res.data.data);
-
-          // Start to connect here
-          client.connect();
-        }
-      })
-      .finally(() => {
-        setLoadingActiveChat(false);
-      });
+    client.connect();
 
     return () => {
       client.close();
@@ -201,17 +188,6 @@ export default function Home() {
 
     // Navigate to active chat
     navigate(`/ui/chat/${chat._id}`);
-
-    // setActiveChat(chat);
-
-    // // Focus on message box
-    // messageInputRef.current?.focus();
-
-    // // Chat window might be scrolled to bottom previously
-    // // So scroll it back to top here
-    // if (chatWindowRef.current) {
-    //   chatWindowRef.current.scrollTop = 0;
-    // }
   }
 
   // Send chat message
@@ -301,13 +277,6 @@ export default function Home() {
   function logout() {
     dispatch({ type: "app/LOGOUT" });
   }
-
-  // function toggleTheme() {
-  //   dispatch({
-  //     type: "app/SET_THEME_MODE",
-  //     themeMode: themeMode === "light" ? "dark" : "light",
-  //   });
-  // }
 
   return (
     <Flex className="Home-root" direction="row">
@@ -414,13 +383,6 @@ export default function Home() {
 
         {/* Settings panel */}
         <Flex className="Home-settings-panel" gap="2">
-          {/* Theme */}
-          {/* Disabled for now: don't want to waste time fine-tuning colors */}
-          {/* <IconButton variant="surface" size="3" onClick={toggleTheme}>
-            {themeMode === "light" && <SunIcon />}
-            {themeMode === "dark" && <MoonIcon />}
-          </IconButton> */}
-
           {/* Account menu */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
