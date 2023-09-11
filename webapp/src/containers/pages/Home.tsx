@@ -65,12 +65,14 @@ export default function Home() {
         // Chats should be already sorted by created date in descending order
         setChats(res.data.data);
 
-        // Set first chat as active if no active chat yet
-        if (res.data.data.data.length && !activeChat) {
-          setActiveChat(res.data.data.data[0]);
+        // Set first chat as active
+        if (res.data.data.data.length) {
+          setActiveChat((chat) => {
+            // Focus on message box
+            messageInputRef.current?.focus();
 
-          // Focus on message box
-          messageInputRef.current?.focus();
+            return !chat ? res.data.data.data[0] : chat;
+          });
         }
       });
   }, [backend, refreshChats]);
@@ -477,7 +479,7 @@ export default function Home() {
               gap="4"
               height="100%"
             >
-              <Text size="4" color="gray" align='center'>
+              <Text size="4" color="gray" align="center">
                 Start chatting with our digital marketing advisor!
               </Text>
               <ArrowDownIcon width="72px" height="72px" color="gray" />
