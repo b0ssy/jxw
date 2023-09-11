@@ -29,37 +29,27 @@ export class ChatController extends Controller {
     // Ensure valid user
     const userId = this.session.getUserIdOrThrow();
 
-    // For first message, we will interject a system message to request
-    // ChatGPT to only talk about marketing related conversations
+    // Create chat doc
     const now = new Date();
-    const messages: Chat["messages"] = [
-      {
-        date: now,
-        role: "user",
-        content: message,
-      },
-      // {
-      //   date: now,
-      //   role: "system",
-      //   content: SYSTEM_PROMPT,
-      // },
-    ];
-
-    // Insert doc
-    const { insertedId } = await db.chats.insertOne({
+    const chat: Chat = {
       createdAt: now,
       updatedAt: now,
       userId,
       status: "running",
-      messages,
-    });
+      messages: [
+        {
+          date: now,
+          role: "user",
+          content: message,
+        },
+      ],
+    };
+    const { insertedId } = await db.chats.insertOne(chat);
 
-    // Get the inserted doc
-    const chat = await db.chats.findOne({ _id: insertedId });
-    if (!chat) {
-      throw new InternalServerError();
-    }
-    const postprocessedChat = this.postprocessChat(chat);
+    const postprocessedChat = this.postprocessChat({
+      ...chat,
+      _id: insertedId,
+    });
 
     // Send updated doc
     chatServer.broadcast(insertedId.toHexString(), {
