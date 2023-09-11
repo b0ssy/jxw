@@ -32,6 +32,17 @@ export const zChat = z.object({
 });
 export type Chat = z.infer<typeof zChat>;
 
+// messages
+export const zMessage = z.object({
+  createdAt: z.date(),
+  userId: z.string(),
+  chatId: z.string(),
+  role: z.enum(["user", "assistant", "system", "function"]),
+  content: z.string(),
+  result: z.any().nullish(),
+});
+export type Message = z.infer<typeof zMessage>;
+
 // Database options
 export type DatabaseOptions = {
   uri: string;
@@ -81,6 +92,11 @@ export class Database {
     //
     // Needs to filter by both _id and userId to ensure user has access
     await this.chats.createIndex({ _id: 1, userId: 1 });
+
+    // Indexes for "messages" collection
+    //
+    // Filter messages by user id and chat id
+    await this.messages.createIndex({ userId: 1, chatId: 1 });
   }
 
   // Close database connection
@@ -104,6 +120,11 @@ export class Database {
   // Get handle to "chats" collection
   get chats() {
     return this.mainDb().collection<Chat>("chats");
+  }
+
+  // Get handle to "messages" collection
+  get messages() {
+    return this.mainDb().collection<Message>("messages");
   }
 
   // Get handle to main database
