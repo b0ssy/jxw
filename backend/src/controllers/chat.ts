@@ -239,7 +239,10 @@ export class ChatController extends Controller {
     };
 
     // Update doc
-    const updateResult = await db.chats.updateOne(
+    //
+    // Note: The document might be deleted while the response is still streaming in
+    //       For now, it doesn't matter and we can safely ignore
+    await db.chats.updateOne(
       {
         _id: chat._id,
         userId,
@@ -254,9 +257,6 @@ export class ChatController extends Controller {
         },
       }
     );
-    if (updateResult.modifiedCount !== 1) {
-      throw new InternalServerError();
-    }
   }
 
   // Post process chat document
