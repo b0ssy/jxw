@@ -32,23 +32,37 @@ export const zChat = z.object({
 });
 export type Chat = z.infer<typeof zChat>;
 
+// Database options
+export type DatabaseOptions = {
+  uri: string;
+};
+
 // Manage MongoDB
 export class Database {
-  client: MongoClient;
+  private options: DatabaseOptions;
+  private client: MongoClient | null = null;
 
-  constructor() {
-    this.client = new MongoClient(ENV.MONGODB_URI, {
+  constructor(options: DatabaseOptions) {
+    this.options = options;
+  }
+
+  // Connect to database
+  async connect() {
+    LOG.info("Connecting to MongoDB...");
+
+    // Warn if database connection is already opened
+    if (this.client) {
+      LOG.warn("Already connected to MongoDB");
+      return;
+    }
+
+    this.client = new MongoClient(this.options.uri, {
       serverApi: {
         version: ServerApiVersion.v1,
         strict: true,
         deprecationErrors: true,
       },
     });
-  }
-
-  // Connect to database
-  async connect() {
-    LOG.info("Connecting to MongoDB...");
     await this.client.connect();
     LOG.info("Connected to MongoDB successfully");
 
@@ -58,12 +72,12 @@ export class Database {
 
   // Create indexes
   async createIndexes() {
-    // users
+    // Indexes for "users" collection
     //
     // Ensure email is unique
     await this.users.createIndex({ email: 1 }, { unique: true });
 
-    // chats
+    // Indexes for "chats" collection
     //
     // Needs to filter by both _id and userId to ensure user has access
     await this.chats.createIndex({ _id: 1, userId: 1 });
@@ -71,25 +85,33 @@ export class Database {
 
   // Close database connection
   async close() {
+    // Database connection is not opened yet
+    if (!this.client) {
+      return;
+    }
+
     LOG.info("Closing MongoDB connection...");
     await this.client.close();
+    this.client = null;
     LOG.info("Closed MongoDB connection successfully");
   }
 
   // Get handle to "users" collection
   get users() {
-    return this._db().collection<User>("users");
+    return this.mainDb().collection<User>("users");
   }
 
   // Get handle to "chats" collection
   get chats() {
-    return this._db().collection<Chat>("chats");
+    return this.mainDb().collection<Chat>("chats");
   }
 
-  // Get default database
-  _db() {
-    return this.client.db();
+  // Get handle to main database
+  private mainDb() {
+    // This function asserts "client" is valid
+    // Otherwise, DX suffers due to conditional checks when using it
+    return this.client!.db();
   }
 }
 
-export default new Database();
+export default new Database({ uri: ENV.MONGODB_URI });
