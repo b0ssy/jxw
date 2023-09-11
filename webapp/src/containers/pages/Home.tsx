@@ -72,7 +72,7 @@ export default function Home() {
         const currentActiveChatId = extractActiveChatId(
           window.location.pathname
         );
-        if (!currentActiveChatId) {
+        if (!currentActiveChatId && chats.data.length) {
           const chat = chats.data[0];
           setActiveChat(chat);
           setLoadingActiveChat(true);
