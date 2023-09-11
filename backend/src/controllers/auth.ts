@@ -31,9 +31,7 @@ export class AuthController extends Controller {
       );
     }
 
-    // TODO: Check duplicate email or check insert error unique violation
-
-    // Create an empty user
+    // Create an empty user to get its id for use as salt
     const now = new Date();
     const { insertedId } = await db.users
       .insertOne({
@@ -121,8 +119,6 @@ export class AuthController extends Controller {
   };
 
   // Create a hashed password with salt
-  // If no salt is provided, a salt will be auto-generated
-  // for hashing with the password
   // Returns hashed password and salt
   static createPasswordHash = (password: string, salt: string) => {
     const passwordHash = crypto

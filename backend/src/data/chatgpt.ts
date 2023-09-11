@@ -9,6 +9,9 @@ export const MODEL = "gpt-3.5-turbo";
 // Number of chunks to send in a batch
 export const SEND_CHUNK_BATCH_COUNT = 5;
 
+// Delay interval between batch of chunks in milliseconds
+export const CHUNK_BATCH_INTERVAL_DELAY_MILLISECONDS = 250;
+
 export type ChatGPTMessage = {
   role: "user" | "assistant" | "system" | "function";
   content: string;
@@ -35,6 +38,7 @@ export class ChatGPT {
       messages,
       model,
       stream: true,
+      temperature: 0.2,
     });
 
     // Read chunk by chunk and emit to clients
@@ -55,12 +59,17 @@ export class ChatGPT {
       if (chunk.choices.length && chunk.choices[0].delta.content) {
         contents.push(chunk.choices[0].delta.content);
 
-        // Emit contents every 10 chunks
+        // Emit contents every X chunks
         // For now, emit the full content
         if (contents.length % SEND_CHUNK_BATCH_COUNT === 0) {
           chatServer.broadcast(chatId, {
             type: "chat_content",
             data: contents.join(""),
+          });
+          await new Promise<void>((resolve) => {
+            setTimeout(() => {
+              resolve();
+            }, CHUNK_BATCH_INTERVAL_DELAY_MILLISECONDS);
           });
         }
       }
