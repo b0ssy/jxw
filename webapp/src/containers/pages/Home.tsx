@@ -477,7 +477,7 @@ export default function Home() {
               gap="4"
               height="100%"
             >
-              <Text size="4" color="gray">
+              <Text size="4" color="gray" align='center'>
                 Start chatting with our digital marketing advisor!
               </Text>
               <ArrowDownIcon width="72px" height="72px" color="gray" />
