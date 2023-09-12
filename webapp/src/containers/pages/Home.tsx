@@ -96,7 +96,7 @@ export default function Home() {
 
   // Load active chat messages
   useEffect(() => {
-    if (!activeChatId || !accessToken) {
+    if (!activeChatId || !accessToken || !chats) {
       return;
     }
 
@@ -212,7 +212,7 @@ export default function Home() {
       chatStillActive = false;
       client.close();
     };
-  }, [accessToken, backend, activeChatId]);
+  }, [accessToken, backend, chats, activeChatId]);
 
   // Create new chat
   function newChat() {
@@ -569,21 +569,20 @@ export default function Home() {
           )}
 
           {/* Empty message placeholder */}
-          {!activeChatId ||
-            (activeChat && !activeChat.messages.length && (
-              <Flex
-                direction="column"
-                align="center"
-                justify="center"
-                gap="4"
-                height="100%"
-              >
-                <Text size="4" color="gray" align="center">
-                  Start chatting with our digital marketing advisor!
-                </Text>
-                <ArrowDownIcon width="72px" height="72px" color="gray" />
-              </Flex>
-            ))}
+          {!activeChatId || (activeChat && !activeChat.messages.length) ? (
+            <Flex
+              direction="column"
+              align="center"
+              justify="center"
+              gap="4"
+              height="100%"
+            >
+              <Text size="4" color="gray" align="center">
+                Start chatting with our digital marketing advisor!
+              </Text>
+              <ArrowDownIcon width="72px" height="72px" color="gray" />
+            </Flex>
+          ) : null}
 
           {/* Blur effect */}
           <Flex
