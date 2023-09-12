@@ -36,6 +36,10 @@ export class ChatController extends Controller {
       updatedAt: now,
       userId,
       status: "running",
+
+      // Store the first user message as the summary text
+      summary: message,
+
       messages: [
         {
           date: now,

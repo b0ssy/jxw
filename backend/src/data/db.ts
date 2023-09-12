@@ -21,6 +21,7 @@ export const zChat = z.object({
   updatedAt: z.date(),
   userId: z.string(),
   status: z.enum(["idle", "running"]),
+  summary: z.string(),
   messages: z
     .object({
       date: z.date(),
