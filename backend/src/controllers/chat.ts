@@ -86,7 +86,13 @@ export class ChatController extends Controller {
 
     // Get messages
     const messages = await db.messages
-      .find({ userId, chatId })
+      .find({
+        userId,
+        chatId,
+        
+        // Only get messages with "user" and "assistant" role
+        role: { $in: ["user", "assistant"] },
+      })
       .sort({ createdAt: 1 })
       .toArray();
 
@@ -163,12 +169,12 @@ export class ChatController extends Controller {
     this._callChatGPT(chatId);
   }
 
-  // Delete chat
+  // Delete chat and all its messages
   async delete(chatId: string) {
     // Ensure valid user
     const userId = this.session.getUserIdOrThrow();
 
-    // Delete doc
+    // Delete chat doc
     const deleteResult = await db.chats.deleteOne({
       _id: new ObjectId(chatId),
       userId,
@@ -179,6 +185,9 @@ export class ChatController extends Controller {
         "invalid_chat_id"
       );
     }
+
+    // Delete message docs
+    await db.messages.deleteMany({ chatId, userId });
   }
 
   // Call ChatGPT
@@ -215,7 +224,8 @@ export class ChatController extends Controller {
         stack: err?.stack ?? "",
       });
       return null;
-    });``
+    });
+    ``;
 
     // Update chat "status" back to "idle"
     const now = new Date();

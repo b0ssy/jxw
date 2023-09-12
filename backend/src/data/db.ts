@@ -91,8 +91,8 @@ export class Database {
 
     // Indexes for "messages" collection
     //
-    // Filter messages by user id and chat id
-    await this.messages.createIndex({ userId: 1, chatId: 1 });
+    // Filter messages by user id, chat id and role
+    await this.messages.createIndex({ userId: 1, chatId: 1, role: 1 });
     // Sort by created date
     await this.messages.createIndex({ createdAt: 1 });
   }
