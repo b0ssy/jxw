@@ -567,7 +567,8 @@ export default function Home() {
           )}
 
           {/* Empty message placeholder */}
-          {!activeChatId || (activeChat && !activeChat.messages.length) ? (
+          {(chats && !activeChatId) ||
+          (activeChat && !activeChat.messages.length) ? (
             <Flex
               direction="column"
               align="center"
