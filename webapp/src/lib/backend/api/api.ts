@@ -137,10 +137,10 @@ export interface V1ChatsIdMessagePost200Response {
     'message': string | null;
     /**
      * 
-     * @type {V1ChatsPost200ResponseData}
+     * @type {object}
      * @memberof V1ChatsIdMessagePost200Response
      */
-    'data': V1ChatsPost200ResponseData;
+    'data': object;
 }
 /**
  * 
@@ -155,6 +155,115 @@ export interface V1ChatsIdMessagePostRequestBody {
      */
     'message': string;
 }
+/**
+ * 
+ * @export
+ * @interface V1ChatsIdMessagesGet200Response
+ */
+export interface V1ChatsIdMessagesGet200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdMessagesGet200Response
+     */
+    'code': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdMessagesGet200Response
+     */
+    'message': string | null;
+    /**
+     * 
+     * @type {V1ChatsIdMessagesGet200ResponseData}
+     * @memberof V1ChatsIdMessagesGet200Response
+     */
+    'data': V1ChatsIdMessagesGet200ResponseData;
+}
+/**
+ * 
+ * @export
+ * @interface V1ChatsIdMessagesGet200ResponseData
+ */
+export interface V1ChatsIdMessagesGet200ResponseData {
+    /**
+     * 
+     * @type {Array<V1ChatsIdMessagesGet200ResponseDataDataInner>}
+     * @memberof V1ChatsIdMessagesGet200ResponseData
+     */
+    'data': Array<V1ChatsIdMessagesGet200ResponseDataDataInner>;
+    /**
+     * 
+     * @type {number}
+     * @memberof V1ChatsIdMessagesGet200ResponseData
+     */
+    'count': number;
+}
+/**
+ * 
+ * @export
+ * @interface V1ChatsIdMessagesGet200ResponseDataDataInner
+ */
+export interface V1ChatsIdMessagesGet200ResponseDataDataInner {
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdMessagesGet200ResponseDataDataInner
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdMessagesGet200ResponseDataDataInner
+     */
+    'updatedAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdMessagesGet200ResponseDataDataInner
+     */
+    'userId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdMessagesGet200ResponseDataDataInner
+     */
+    'chatId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdMessagesGet200ResponseDataDataInner
+     */
+    'role': V1ChatsIdMessagesGet200ResponseDataDataInnerRoleEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdMessagesGet200ResponseDataDataInner
+     */
+    'content': string;
+    /**
+     * 
+     * @type {any}
+     * @memberof V1ChatsIdMessagesGet200ResponseDataDataInner
+     */
+    'result'?: any | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof V1ChatsIdMessagesGet200ResponseDataDataInner
+     */
+    '_id': string;
+}
+
+export const V1ChatsIdMessagesGet200ResponseDataDataInnerRoleEnum = {
+    User: 'user',
+    Assistant: 'assistant',
+    System: 'system',
+    Function: 'function'
+} as const;
+
+export type V1ChatsIdMessagesGet200ResponseDataDataInnerRoleEnum = typeof V1ChatsIdMessagesGet200ResponseDataDataInnerRoleEnum[keyof typeof V1ChatsIdMessagesGet200ResponseDataDataInnerRoleEnum];
+
 /**
  * 
  * @export
@@ -212,10 +321,10 @@ export interface V1ChatsPost200ResponseData {
     'status': V1ChatsPost200ResponseDataStatusEnum;
     /**
      * 
-     * @type {Array<V1ChatsPost200ResponseDataMessagesInner>}
+     * @type {string}
      * @memberof V1ChatsPost200ResponseData
      */
-    'messages': Array<V1ChatsPost200ResponseDataMessagesInner>;
+    'summary': string;
     /**
      * 
      * @type {string}
@@ -230,47 +339,6 @@ export const V1ChatsPost200ResponseDataStatusEnum = {
 } as const;
 
 export type V1ChatsPost200ResponseDataStatusEnum = typeof V1ChatsPost200ResponseDataStatusEnum[keyof typeof V1ChatsPost200ResponseDataStatusEnum];
-
-/**
- * 
- * @export
- * @interface V1ChatsPost200ResponseDataMessagesInner
- */
-export interface V1ChatsPost200ResponseDataMessagesInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof V1ChatsPost200ResponseDataMessagesInner
-     */
-    'date': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof V1ChatsPost200ResponseDataMessagesInner
-     */
-    'role': V1ChatsPost200ResponseDataMessagesInnerRoleEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof V1ChatsPost200ResponseDataMessagesInner
-     */
-    'content': string;
-    /**
-     * 
-     * @type {any}
-     * @memberof V1ChatsPost200ResponseDataMessagesInner
-     */
-    'result'?: any | null;
-}
-
-export const V1ChatsPost200ResponseDataMessagesInnerRoleEnum = {
-    User: 'user',
-    Assistant: 'assistant',
-    System: 'system',
-    Function: 'function'
-} as const;
-
-export type V1ChatsPost200ResponseDataMessagesInnerRoleEnum = typeof V1ChatsPost200ResponseDataMessagesInnerRoleEnum[keyof typeof V1ChatsPost200ResponseDataMessagesInnerRoleEnum];
 
 /**
  * 
@@ -615,6 +683,40 @@ export const ChatApiAxiosParamCreator = function (configuration?: Configuration)
             };
         },
         /**
+         * Get chat messages
+         * @summary Get chat messages
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ChatsIdMessagesGet: async (id: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('v1ChatsIdMessagesGet', 'id', id)
+            const localVarPath = `/v1/chats/{id}/messages`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Create chat
          * @summary Create chat
          * @param {V1ChatsPostRequestBody} v1ChatsPostRequestBody 
@@ -705,6 +807,17 @@ export const ChatApiFp = function(configuration?: Configuration) {
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
         /**
+         * Get chat messages
+         * @summary Get chat messages
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async v1ChatsIdMessagesGet(id: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<V1ChatsIdMessagesGet200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.v1ChatsIdMessagesGet(id, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
          * Create chat
          * @summary Create chat
          * @param {V1ChatsPostRequestBody} v1ChatsPostRequestBody 
@@ -763,6 +876,16 @@ export const ChatApiFactory = function (configuration?: Configuration, basePath?
          */
         v1ChatsIdMessagePost(requestParameters: ChatApiV1ChatsIdMessagePostRequest, options?: AxiosRequestConfig): AxiosPromise<V1ChatsIdMessagePost200Response> {
             return localVarFp.v1ChatsIdMessagePost(requestParameters.id, requestParameters.v1ChatsIdMessagePostRequestBody, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Get chat messages
+         * @summary Get chat messages
+         * @param {ChatApiV1ChatsIdMessagesGetRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        v1ChatsIdMessagesGet(requestParameters: ChatApiV1ChatsIdMessagesGetRequest, options?: AxiosRequestConfig): AxiosPromise<V1ChatsIdMessagesGet200Response> {
+            return localVarFp.v1ChatsIdMessagesGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * Create chat
@@ -824,6 +947,20 @@ export interface ChatApiV1ChatsIdMessagePostRequest {
      * @memberof ChatApiV1ChatsIdMessagePost
      */
     readonly v1ChatsIdMessagePostRequestBody: V1ChatsIdMessagePostRequestBody
+}
+
+/**
+ * Request parameters for v1ChatsIdMessagesGet operation in ChatApi.
+ * @export
+ * @interface ChatApiV1ChatsIdMessagesGetRequest
+ */
+export interface ChatApiV1ChatsIdMessagesGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ChatApiV1ChatsIdMessagesGet
+     */
+    readonly id: string
 }
 
 /**
@@ -892,6 +1029,18 @@ export class ChatApi extends BaseAPI {
      */
     public v1ChatsIdMessagePost(requestParameters: ChatApiV1ChatsIdMessagePostRequest, options?: AxiosRequestConfig) {
         return ChatApiFp(this.configuration).v1ChatsIdMessagePost(requestParameters.id, requestParameters.v1ChatsIdMessagePostRequestBody, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Get chat messages
+     * @summary Get chat messages
+     * @param {ChatApiV1ChatsIdMessagesGetRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ChatApi
+     */
+    public v1ChatsIdMessagesGet(requestParameters: ChatApiV1ChatsIdMessagesGetRequest, options?: AxiosRequestConfig) {
+        return ChatApiFp(this.configuration).v1ChatsIdMessagesGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

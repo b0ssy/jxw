@@ -93,36 +93,8 @@
                   "running"
                 ]
               },
-              "messages": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "date": {
-                      "type": "string"
-                    },
-                    "role": {
-                      "type": "string",
-                      "enum": [
-                        "user",
-                        "assistant",
-                        "system",
-                        "function"
-                      ]
-                    },
-                    "content": {
-                      "type": "string"
-                    },
-                    "result": {
-                      "nullable": true
-                    }
-                  },
-                  "required": [
-                    "date",
-                    "role",
-                    "content"
-                  ]
-                }
+              "summary": {
+                "type": "string"
               },
               "_id": {
                 "type": "string"
@@ -133,98 +105,7 @@
               "updatedAt",
               "userId",
               "status",
-              "messages",
-              "_id"
-            ]
-          }
-        },
-        "required": [
-          "code",
-          "message",
-          "data"
-        ]
-      },
-      "V1Chats_id_MessagePostRequestBody": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "V1Chats_id_MessagePost200Response": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string",
-            "nullable": true
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "createdAt": {
-                "type": "string"
-              },
-              "updatedAt": {
-                "type": "string"
-              },
-              "userId": {
-                "type": "string"
-              },
-              "status": {
-                "type": "string",
-                "enum": [
-                  "idle",
-                  "running"
-                ]
-              },
-              "messages": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "date": {
-                      "type": "string"
-                    },
-                    "role": {
-                      "type": "string",
-                      "enum": [
-                        "user",
-                        "assistant",
-                        "system",
-                        "function"
-                      ]
-                    },
-                    "content": {
-                      "type": "string"
-                    },
-                    "result": {
-                      "nullable": true
-                    }
-                  },
-                  "required": [
-                    "date",
-                    "role",
-                    "content"
-                  ]
-                }
-              },
-              "_id": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "createdAt",
-              "updatedAt",
-              "userId",
-              "status",
-              "messages",
+              "summary",
               "_id"
             ]
           }
@@ -264,12 +145,57 @@
                   "running"
                 ]
               },
-              "messages": {
+              "summary": {
+                "type": "string"
+              },
+              "_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "createdAt",
+              "updatedAt",
+              "userId",
+              "status",
+              "summary",
+              "_id"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "data"
+        ]
+      },
+      "V1Chats_id_MessagesGet200Response": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "data": {
                 "type": "array",
                 "items": {
                   "type": "object",
                   "properties": {
-                    "date": {
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "chatId": {
                       "type": "string"
                     },
                     "role": {
@@ -286,26 +212,29 @@
                     },
                     "result": {
                       "nullable": true
+                    },
+                    "_id": {
+                      "type": "string"
                     }
                   },
                   "required": [
-                    "date",
+                    "createdAt",
+                    "updatedAt",
+                    "userId",
+                    "chatId",
                     "role",
-                    "content"
+                    "content",
+                    "_id"
                   ]
                 }
               },
-              "_id": {
-                "type": "string"
+              "count": {
+                "type": "number"
               }
             },
             "required": [
-              "createdAt",
-              "updatedAt",
-              "userId",
-              "status",
-              "messages",
-              "_id"
+              "data",
+              "count"
             ]
           }
         },
@@ -349,36 +278,8 @@
                         "running"
                       ]
                     },
-                    "messages": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "date": {
-                            "type": "string"
-                          },
-                          "role": {
-                            "type": "string",
-                            "enum": [
-                              "user",
-                              "assistant",
-                              "system",
-                              "function"
-                            ]
-                          },
-                          "content": {
-                            "type": "string"
-                          },
-                          "result": {
-                            "nullable": true
-                          }
-                        },
-                        "required": [
-                          "date",
-                          "role",
-                          "content"
-                        ]
-                      }
+                    "summary": {
+                      "type": "string"
                     },
                     "_id": {
                       "type": "string"
@@ -389,7 +290,7 @@
                     "updatedAt",
                     "userId",
                     "status",
-                    "messages",
+                    "summary",
                     "_id"
                   ]
                 }
@@ -402,6 +303,38 @@
               "data",
               "count"
             ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "data"
+        ]
+      },
+      "V1Chats_id_MessagePostRequestBody": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "V1Chats_id_MessagePost200Response": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {}
           }
         },
         "required": [
@@ -516,47 +449,6 @@
         }
       }
     },
-    "/v1/chats/{id}/message": {
-      "post": {
-        "summary": "Create chat message",
-        "description": "Create chat message",
-        "tags": [
-          "Chat"
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "required": true,
-            "name": "id",
-            "in": "path"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/V1Chats_id_MessagePostRequestBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Operation sucessful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V1Chats_id_MessagePost200Response"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/v1/chats/{id}": {
       "get": {
         "summary": "Get chat",
@@ -610,6 +502,78 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/V1Chats_id_Delete200Response"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chats/{id}/messages": {
+      "get": {
+        "summary": "Get chat messages",
+        "description": "Get chat messages",
+        "tags": [
+          "Chat"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation sucessful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Chats_id_MessagesGet200Response"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chats/{id}/message": {
+      "post": {
+        "summary": "Create chat message",
+        "description": "Create chat message",
+        "tags": [
+          "Chat"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V1Chats_id_MessagePostRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operation sucessful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Chats_id_MessagePost200Response"
                 }
               }
             }

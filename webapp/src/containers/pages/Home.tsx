@@ -30,13 +30,20 @@ import moment from "moment";
 
 import ChatBubble from "../../components/ChatBubble";
 import { useBackend } from "../../lib/backend";
-import { V1ChatsGet200ResponseData } from "../../lib/backend/api";
+import {
+  V1ChatsGet200ResponseData,
+  V1ChatsIdMessagesGet200ResponseData,
+} from "../../lib/backend/api";
 import { ChatClient } from "../../lib/chat-client";
 import { useSelector, useDispatch } from "../../redux/store";
 import { ROUTES } from "../../routes";
 import "./Home.css";
 
 export type Chat = V1ChatsGet200ResponseData["data"][0];
+export type Message = Omit<
+  V1ChatsIdMessagesGet200ResponseData["data"][0],
+  "chatId" | "userId"
+>;
 
 export default function Home() {
   const accessToken = useSelector((state) => state.app.accessToken);
@@ -49,8 +56,12 @@ export default function Home() {
 
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
   const [message, setMessage] = useState("");
-  const [activeChat, setActiveChat] = useState<Chat | null>(null);
-  const [chats, setChats] = useState<V1ChatsGet200ResponseData | null>(null);
+  const [activeChat, setActiveChat] = useState<
+    (Chat & { messages: Message[] }) | null
+  >(null);
+  const [chats, setChats] = useState<V1ChatsGet200ResponseData["data"] | null>(
+    null
+  );
   const [loadingActiveChat, setLoadingActiveChat] = useState(false);
 
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
@@ -65,18 +76,16 @@ export default function Home() {
       .v1ChatsGet()
       .then((res) => {
         // Chats should be already sorted by created date in descending order
-        const chats = res.data.data;
+        const chats = res.data.data.data;
         setChats(chats);
 
         // If no active chat selected, then set first chat as active
         const currentActiveChatId = extractActiveChatId(
           window.location.pathname
         );
-        if (!currentActiveChatId && chats.data.length) {
-          const chat = chats.data[0];
-          setActiveChat(chat);
+        if (!currentActiveChatId && chats.length) {
           setLoadingActiveChat(true);
-          navigate(`/ui/chat/${chat._id}`);
+          navigate(`/ui/chat/${chats[0]._id}`);
 
           // Focus on message box
           messageInputRef.current?.focus();
@@ -93,28 +102,22 @@ export default function Home() {
     // Load the active chat
     setLoadingActiveChat(true);
 
+    // Flag to indicate whether the chat is still active after response is received
+    let chatStillActive = true;
+
     // Chat websocket client to get ChatGPT streaming response
     const client = new ChatClient({
       accessToken,
       chatId: activeChatId,
       onReceive: (event) => {
-        // Need to check to ensure chat is still active
-        const currentActiveChatId = extractActiveChatId(
-          window.location.pathname
-        );
-        if (currentActiveChatId !== activeChatId) {
+        // Ensure chat is still active
+        if (!chatStillActive) {
           return;
         }
 
         setLoadingActiveChat(false);
 
         switch (event.type) {
-          // Full chat document
-          case "chat": {
-            const updatedChat = event.data;
-            setActiveChat(updatedChat);
-            break;
-          }
           // Latest chat response from ChatGPT
           case "chat_content": {
             const content = event.data;
@@ -124,8 +127,11 @@ export default function Home() {
                   !chat.messages.length ||
                   chat.messages[chat.messages.length - 1].role !== "assistant"
                 ) {
+                  const createdAt = new Date().toISOString();
                   chat.messages.push({
-                    date: new Date().toISOString(),
+                    _id: "",
+                    createdAt,
+                    updatedAt: createdAt,
                     role: "assistant",
                     content: "",
                   });
@@ -159,9 +165,29 @@ export default function Home() {
         }
       },
     });
-    client.connect();
+
+    // Get chat and its messages
+    Promise.all([
+      backend.createChatApi().v1ChatsIdGet({ id: activeChatId }),
+      backend.createChatApi().v1ChatsIdMessagesGet({ id: activeChatId }),
+    ]).then((results) => {
+      // Chat no longer active, discard response
+      if (!chatStillActive) {
+        return;
+      }
+
+      // Set active chat
+      setActiveChat({
+        ...results[0].data.data,
+        messages: results[1].data.data.data,
+      });
+
+      // Connect to websocket now
+      client.connect();
+    });
 
     return () => {
+      chatStillActive = false;
       client.close();
     };
   }, [accessToken, backend, activeChatId]);
@@ -207,24 +233,25 @@ export default function Home() {
         .createChatApi()
         .v1ChatsPost({ v1ChatsPostRequestBody: { message } });
 
-      const data = [res.data.data, ...(chats ? chats.data : [])];
-      setChats({ count: data.length, data });
+      const newChats = [res.data.data, ...(chats ?? [])];
+      setChats(newChats);
       navigate(`${ROUTES.home}/chat/${res.data.data._id}`);
       return;
     }
 
     // Update new chat message
+    const now = new Date().toISOString();
+    const newMessage = {
+      _id: "",
+      createdAt: now,
+      updatedAt: now,
+      role: "user",
+      content: message,
+    } as const;
     setActiveChat({
       ...activeChat,
       status: "running",
-      messages: [
-        ...activeChat.messages,
-        {
-          date: new Date().toISOString(),
-          role: "user",
-          content: message,
-        },
-      ],
+      messages: [...activeChat.messages, newMessage],
     });
     await backend.createChatApi().v1ChatsIdMessagePost({
       id: activeChat._id,
@@ -249,8 +276,8 @@ export default function Home() {
     backend.createChatApi().v1ChatsIdDelete({ id });
 
     // Remove from chats list
-    const data = chats ? chats.data.filter((chat) => chat._id !== id) : [];
-    setChats({ count: data.length, data });
+    const newChats = chats?.filter((chat) => chat._id !== id) ?? [];
+    setChats(newChats);
 
     // If deleted chat is active chat
     if (activeChatId === id) {
@@ -258,8 +285,8 @@ export default function Home() {
       setActiveChat(null);
 
       // Navigate to the first chat if available
-      if (data.length) {
-        navigate(`${ROUTES.home}/chat/${data[0]._id}`);
+      if (newChats.length) {
+        navigate(`${ROUTES.home}/chat/${newChats[0]._id}`);
       }
       // Otherwise, navigate to root
       else {
@@ -293,21 +320,18 @@ export default function Home() {
         <Flex
           className="Home-chats"
           direction="column"
-          align={!chats?.data.length ? "center" : undefined}
-          justify={!chats?.data.length ? "center" : undefined}
+          align={!chats?.length ? "center" : undefined}
+          justify={!chats?.length ? "center" : undefined}
           grow="1"
           my="2"
         >
-          {chats?.data.map((chat) => {
-            const firstMessageContent = chat.messages.length
-              ? chat.messages[0].content
-              : "No message available";
+          {chats?.map((chat) => {
             return (
               <Card
                 key={chat._id}
                 className="Home-chats-message"
                 variant={activeChatId === chat._id ? "surface" : "ghost"}
-                title={firstMessageContent}
+                title={chat.summary}
                 onClick={() => selectChat(chat)}
               >
                 <Flex gap="2" align="center">
@@ -317,7 +341,7 @@ export default function Home() {
                     size="2"
                     weight={activeChatId === chat._id ? "bold" : undefined}
                   >
-                    {firstMessageContent}
+                    {chat.summary}
                   </Text>
 
                   {/* Delete chat dialog */}
@@ -340,7 +364,7 @@ export default function Home() {
                     <AlertDialog.Content style={{ maxWidth: 450 }}>
                       <AlertDialog.Title>Delete Chat</AlertDialog.Title>
                       <AlertDialog.Description size="2">
-                        <Em>{firstMessageContent}</Em>
+                        <Em>{chat.summary}</Em>
                         <br />
                         <br />
                         Are you sure you want to delete the chat above?
@@ -372,7 +396,7 @@ export default function Home() {
               </Card>
             );
           })}
-          {chats && !chats.data.length && (
+          {chats && !chats.length && (
             <>
               <ChatBubbleIcon width="72px" height="72px" color="gray" />
               <div style={{ height: "16px" }} />
@@ -437,7 +461,7 @@ export default function Home() {
                     return null;
                   }
                   const now = moment();
-                  const date = moment(message.date);
+                  const date = moment(message.createdAt);
                   const dateStr =
                     activeChat.status === "idle" ||
                     message.role === "user" ||
@@ -627,21 +651,18 @@ export default function Home() {
         <Flex
           className="Home-chats"
           direction="column"
-          align={!chats?.data.length ? "center" : undefined}
-          justify={!chats?.data.length ? "center" : undefined}
+          align={!chats?.length ? "center" : undefined}
+          justify={!chats?.length ? "center" : undefined}
           grow="1"
           my="2"
         >
-          {chats?.data.map((chat) => {
-            const firstMessageContent = chat.messages.length
-              ? chat.messages[0].content
-              : "No message available";
+          {chats?.map((chat) => {
             return (
               <Card
                 key={chat._id}
                 className="Home-chats-message"
                 variant={activeChatId === chat._id ? "surface" : "ghost"}
-                title={firstMessageContent}
+                title={chat.summary}
                 onClick={() => {
                   selectChat(chat);
                   setOpenMobileDrawer(false);
@@ -654,7 +675,7 @@ export default function Home() {
                     size="2"
                     weight={activeChatId === chat._id ? "bold" : undefined}
                   >
-                    {firstMessageContent}
+                    {chat.summary}
                   </Text>
 
                   {/* Delete chat dialog */}
@@ -677,7 +698,7 @@ export default function Home() {
                     <AlertDialog.Content style={{ maxWidth: 450 }}>
                       <AlertDialog.Title>Delete Chat</AlertDialog.Title>
                       <AlertDialog.Description size="2">
-                        <Em>{firstMessageContent}</Em>
+                        <Em>{chat.summary}</Em>
                         <br />
                         <br />
                         Are you sure you want to delete the chat above?
@@ -709,7 +730,7 @@ export default function Home() {
               </Card>
             );
           })}
-          {chats && !chats.data.length && (
+          {chats && !chats.length && (
             <>
               <ChatBubbleIcon width="72px" height="72px" color="gray" />
               <div style={{ height: "16px" }} />

@@ -1,8 +1,7 @@
 import { ObjectId, WithId } from "mongodb";
 
-import db, { Chat } from "../data/db";
+import db, { Chat, Message } from "../data/db";
 import chatgpt from "../data/chatgpt";
-import chatServer from "../data/chat-server";
 import { Controller } from "../data/api";
 import { Logger } from "../helpers/logger";
 import { BadRequestError, InternalServerError } from "../errors";
@@ -39,32 +38,24 @@ export class ChatController extends Controller {
 
       // Store the first user message as the summary text
       summary: message,
-
-      messages: [
-        {
-          date: now,
-          role: "user",
-          content: message,
-        },
-      ],
     };
     const { insertedId } = await db.chats.insertOne(chat);
+    const chatId = insertedId.toHexString();
 
-    const postprocessedChat = this.postprocessChat({
-      ...chat,
-      _id: insertedId,
-    });
-
-    // Send updated doc
-    chatServer.broadcast(insertedId.toHexString(), {
-      type: "chat",
-      data: postprocessedChat,
+    // Create message doc
+    await db.messages.insertOne({
+      createdAt: now,
+      updatedAt: now,
+      userId,
+      chatId,
+      role: "user",
+      content: message,
     });
 
     // Call ChatGPT in the background
-    this._callChatGPT(insertedId.toHexString());
+    this._callChatGPT(chatId);
 
-    return postprocessedChat;
+    return { ...chat, _id: chatId };
   }
 
   // Get one chat
@@ -72,7 +63,7 @@ export class ChatController extends Controller {
     // Ensure valid user
     const userId = this.session.getUserIdOrThrow();
 
-    // Get the inserted doc
+    // Get chat doc
     const chat = await db.chats.findOne({
       _id: new ObjectId(chatId),
       userId,
@@ -81,7 +72,27 @@ export class ChatController extends Controller {
       throw new InternalServerError();
     }
 
-    return this.postprocessChat(chat);
+    return { ...chat, _id: chat._id.toHexString() };
+  }
+
+  // Get chat messages
+  async getMessages(chatId: string) {
+    // Ensure valid user
+    const userId = this.session.getUserIdOrThrow();
+
+    // Get messages
+    const messages = await db.messages
+      .find({ userId, chatId })
+      .sort({ createdAt: 1 })
+      .toArray();
+
+    return {
+      data: messages.map((message) => ({
+        ...message,
+        _id: message._id.toHexString(),
+      })),
+      count: messages.length,
+    };
   }
 
   // List all chats
@@ -96,7 +107,7 @@ export class ChatController extends Controller {
       .toArray();
 
     return {
-      data: chats.map((chat) => this.postprocessChat(chat)),
+      data: chats.map((chat) => ({ ...chat, _id: chat._id.toHexString() })),
       count: chats.length,
     };
   }
@@ -115,7 +126,7 @@ export class ChatController extends Controller {
     // Ensure valid user
     const userId = this.session.getUserIdOrThrow();
 
-    // Push new message
+    // Update chat "status" to "running"
     const now = new Date();
     const updateResult = await db.chats.updateOne(
       {
@@ -128,36 +139,24 @@ export class ChatController extends Controller {
           updatedAt: now,
           status: "running",
         },
-        $push: {
-          messages: {
-            date: now,
-            role: "user",
-            content: message,
-          },
-        },
       }
     );
     if (updateResult.modifiedCount !== 1) {
       throw new BadRequestError();
     }
 
-    // Get the updated doc
-    const chat = await db.chats.findOne({ _id: new ObjectId(chatId) });
-    if (!chat) {
-      throw new InternalServerError();
-    }
-    const postprocessedChat = this.postprocessChat(chat);
-
-    // Send updated doc
-    chatServer.broadcast(chatId, {
-      type: "chat",
-      data: postprocessedChat,
+    // Create message doc
+    await db.messages.insertOne({
+      createdAt: now,
+      updatedAt: now,
+      userId,
+      chatId,
+      role: "user",
+      content: message,
     });
 
     // Call ChatGPT in the background
     this._callChatGPT(chatId);
-
-    return postprocessedChat;
   }
 
   // Delete chat
@@ -183,84 +182,67 @@ export class ChatController extends Controller {
     // Ensure valid user
     const userId = this.session.getUserIdOrThrow();
 
-    // Ensure valid chat id
-    const chat = await db.chats.findOne({
-      _id: new ObjectId(chatId),
-      userId,
-    });
-    if (!chat) {
+    // Get all chat messages with created date sorted in ascending order
+    const messages = await db.messages
+      .find({ userId, chatId })
+      .sort({ createdAt: 1 })
+      .project<Pick<Message, "role" | "content">>({
+        _id: 0,
+        role: 1,
+        content: 1,
+      })
+      .toArray();
+    if (!messages.length) {
       throw new BadRequestError(
         "Please provide a valid chat id",
         "invalid_chat_id"
       );
     }
+    // Insert system prompt at the end
+    messages.push({
+      role: "system",
+      content: SYSTEM_PROMPT,
+    });
 
     // Call chat completion
-    const result = await chatgpt
-      .chatComplete(chat._id.toHexString(), [
-        ...chat.messages.map((message) => ({
-          role: message.role,
-          content: message.content,
-        })),
-        {
-          role: "system",
-          content: SYSTEM_PROMPT,
-        },
-      ])
-      .catch((err) => {
-        LOG.error("ChatGPT chat completion error", {
-          message: err?.message ?? "",
-          stack: err?.stack ?? "",
-        });
-        return null;
+    const result = await chatgpt.chatComplete(chatId, messages).catch((err) => {
+      LOG.error("ChatGPT chat completion error", {
+        message: err?.message ?? "",
+        stack: err?.stack ?? "",
       });
-    // Error occured, update status back to idle
-    if (!result) {
-      await db.chats.updateOne(
-        {
-          _id: chat._id,
-          userId,
-        },
-        {
-          $set: {
-            updatedAt: new Date(),
-            status: "idle",
-          },
-        }
-      );
-      return;
-    }
+      return null;
+    });
 
-    const resultMessage: Chat["messages"][0] = {
-      date: new Date(result.created * 1000),
-      role: result.choices.length
-        ? result.choices[0].message.role
-        : "assistant",
-      content: result.choices.length
-        ? result.choices[0].message.content || ""
-        : "",
-      result,
-    };
-
-    // Update doc
-    //
-    // Note: The document might be deleted while the response is still streaming in
-    //       For now, it doesn't matter and we can safely ignore
+    // Update chat "status" back to "idle"
+    const now = new Date();
     await db.chats.updateOne(
       {
-        _id: chat._id,
+        _id: new ObjectId(chatId),
         userId,
       },
       {
         $set: {
-          updatedAt: new Date(),
+          updatedAt: now,
           status: "idle",
-        },
-        $push: {
-          messages: resultMessage,
         },
       }
     );
+
+    // Create result message doc
+    // Note: If result is not available, we will create an empty message to denote something went wrong
+    await db.messages.insertOne({
+      createdAt: now,
+      updatedAt: now,
+      userId,
+      chatId,
+      role: result?.choices.length
+        ? result.choices[0].message.role
+        : "assistant",
+      content: result?.choices.length
+        ? result.choices[0].message.content || ""
+        : "",
+      result,
+    });
   }
 
   // Post process chat document
@@ -272,9 +254,6 @@ export class ChatController extends Controller {
 
       // Convert to string
       _id: chat._id.toHexString(),
-
-      // Filter away system messages
-      messages: chat.messages.filter((message) => message.role !== "system"),
     };
   }
 }

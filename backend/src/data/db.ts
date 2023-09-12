@@ -22,20 +22,13 @@ export const zChat = z.object({
   userId: z.string(),
   status: z.enum(["idle", "running"]),
   summary: z.string(),
-  messages: z
-    .object({
-      date: z.date(),
-      role: z.enum(["user", "assistant", "system", "function"]),
-      content: z.string(),
-      result: z.any().nullish(),
-    })
-    .array(),
 });
 export type Chat = z.infer<typeof zChat>;
 
 // messages
 export const zMessage = z.object({
   createdAt: z.date(),
+  updatedAt: z.date(),
   userId: z.string(),
   chatId: z.string(),
   role: z.enum(["user", "assistant", "system", "function"]),
@@ -93,11 +86,15 @@ export class Database {
     //
     // Needs to filter by both _id and userId to ensure user has access
     await this.chats.createIndex({ _id: 1, userId: 1 });
+    // Sort by created date
+    await this.messages.createIndex({ createdAt: 1 });
 
     // Indexes for "messages" collection
     //
     // Filter messages by user id and chat id
     await this.messages.createIndex({ userId: 1, chatId: 1 });
+    // Sort by created date
+    await this.messages.createIndex({ createdAt: 1 });
   }
 
   // Close database connection

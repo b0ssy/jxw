@@ -8,28 +8,12 @@ export const WEBSOCKET_RECONNECT_TIMEOUT_MILLISECONDS = 1000;
 
 // Websocket server events
 export const zChatServerEvent = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("chat"),
-    data: z.object({
-      _id: z.string(),
-      createdAt: z.string(),
-      updatedAt: z.string(),
-      userId: z.string(),
-      status: z.enum(["idle", "running"]),
-      messages: z
-        .object({
-          date: z.string(),
-          role: z.enum(["user", "assistant", "system", "function"]),
-          content: z.string(),
-          result: z.any().nullish(),
-        })
-        .array(),
-    }),
-  }),
+  // Latest chat response from ChatGPT
   z.object({
     type: z.literal("chat_content"),
     data: z.string(),
   }),
+  // Indicates that chat content has ended
   z.object({
     type: z.literal("chat_content_end"),
   }),

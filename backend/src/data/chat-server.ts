@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 
-import db, { zChat } from "./db";
+import db from "./db";
 import { Session, decodeJWTPayload } from "./session";
 import { BadRequestError, NotAuthorizedError } from "../errors";
 import { ChatController } from "../controllers/chat";
@@ -14,11 +14,6 @@ export const CHAT_PATH = "/chat";
 
 // Websocket server events
 export const zChatServerEvent = z.discriminatedUnion("type", [
-  // Full chat document
-  z.object({
-    type: z.literal("chat"),
-    data: zChat.extend({ _id: z.string() }),
-  }),
   // Latest chat response from ChatGPT
   z.object({
     type: z.literal("chat_content"),
@@ -157,10 +152,6 @@ export class ChatServer {
           }
         }
       });
-
-      // Send full chat document initially
-      const chat = await chatController.get(chatId);
-      await this.sendServerEvent(client, { type: "chat", data: chat });
     } catch (err) {
       // Close connection on any errors
       connection.close();
