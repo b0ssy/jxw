@@ -203,7 +203,7 @@ export class ChatController extends Controller {
       );
     }
     // Insert system prompt at the front
-    messages.push({
+    messages.unshift({
       role: "system",
       content: SYSTEM_PROMPT,
     });
@@ -215,7 +215,7 @@ export class ChatController extends Controller {
         stack: err?.stack ?? "",
       });
       return null;
-    });
+    });``
 
     // Update chat "status" back to "idle"
     const now = new Date();

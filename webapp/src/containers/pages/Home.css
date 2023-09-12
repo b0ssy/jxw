@@ -10,7 +10,6 @@
   left: 0;
   width: 250px;
   height: 100%;
-  padding: 8px;
   background-color: var(--gray-3);
 }
 @media only screen and (max-width: 1024px) {
@@ -19,8 +18,15 @@
   }
 }
 
+.Home-new-chat {
+  margin: 8px 8px 0 8px;
+}
+
 .Home-chats {
-  overflow-y: auto;
+  margin-left: 8px;
+
+  /* Always show scrollbar so it won't affect the chats width */
+  overflow-y: scroll;
 }
 .Home-chats-message {
   margin: 2px 0;
@@ -33,8 +39,25 @@
   text-overflow: ellipsis;
 }
 
+/* Style scrollbar in a way it will be hidden even though it is showing */
+.Home-chats::-webkit-scrollbar {
+  width: 8px;
+}
+.Home-chats::-webkit-scrollbar-track {
+  background: var(--gray-3);
+}
+.Home-chats::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+.Home-chats:hover::-webkit-scrollbar-thumb {
+  background: var(--gray-9);
+}
+.Home-chats::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-7);
+}
+
 .Home-settings-panel {
-  margin-bottom: 8px;
+  margin: 0 8px 8px 8px;
 }
 .Home-account-button {
   flex-grow: 1;
@@ -46,13 +69,30 @@
 .Home-chat-window {
   padding-top: 50px;
   padding-left: 250px;
-  overflow-y: auto;
+
+  /* Always show scrollbar so it won't affect the chat window width */
+  overflow-y: scroll;
 }
 @media only screen and (max-width: 1024px) {
   .Home-chat-window {
     padding-left: 0;
   }
 }
+
+/* Style scrollbar in a way it will be hidden even though it is showing */
+.Home-chat-window::-webkit-scrollbar {
+  width: 8px;
+}
+.Home-chat-window::-webkit-scrollbar-track {
+  background: var(--gray-1);
+}
+.Home-chat-window::-webkit-scrollbar-thumb {
+  background: var(--gray-9);
+}
+.Home-chat-window::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-7);
+}
+
 .Home-chat-window > div {
   width: 100%;
   max-width: 768px;
@@ -145,6 +185,5 @@
   }
 
   .Home-mobile-left-drawer > div {
-    padding: 0 8px;
   }
 }

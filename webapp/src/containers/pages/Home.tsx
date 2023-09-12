@@ -315,7 +315,12 @@ export default function Home() {
       {/* Chat left panel */}
       <Flex className="Home-left-panel" direction="column">
         {/* New chat */}
-        <Button variant="soft" size="3" onClick={newChat}>
+        <Button
+          className="Home-new-chat"
+          variant="soft"
+          size="3"
+          onClick={newChat}
+        >
           <PlusIcon />
           New chat
           <Flex grow="1" />
@@ -335,7 +340,7 @@ export default function Home() {
             return (
               <Card
                 key={chat._id}
-                className="Home-chats-message"
+                className="Home-chats-message noselect"
                 variant={activeChatId === chat._id ? "surface" : "ghost"}
                 title={chat.summary}
                 onClick={() => selectChat(chat)}
