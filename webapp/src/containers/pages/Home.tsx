@@ -1,5 +1,5 @@
 import { Fragment, useRef, useState, useEffect } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import {
   Flex,
@@ -51,8 +51,8 @@ export default function Home() {
   const accessToken = useSelector((state) => state.app.accessToken);
   const dispatch = useDispatch();
 
-  const location = useLocation();
   const navigate = useNavigate();
+  const { id: activeChatId } = useParams();
 
   const backend = useBackend();
 
@@ -68,8 +68,6 @@ export default function Home() {
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
   const messageInputRef = useRef<HTMLInputElement | null>(null);
 
-  const activeChatId = extractActiveChatId(location.pathname);
-
   // Get all chats at start
   useEffect(() => {
     sleepFn1000ms(backend.createChatApi().v1ChatsGet()).then((res) => {
@@ -80,15 +78,6 @@ export default function Home() {
       // Chats should be already sorted by created date in descending order
       const chats = res.data.data.data;
       setChats(chats);
-
-      // If no active chat selected, then set first chat as active
-      // const currentActiveChatId = extractActiveChatId(window.location.pathname);
-      // if (!currentActiveChatId && chats.length) {
-      //   navigate(`/ui/chat/${chats[0]._id}`);
-
-      //   // Focus on message box
-      //   messageInputRef.current?.focus();
-      // }
     });
   }, [backend]);
 
@@ -783,11 +772,4 @@ export default function Home() {
       </Flex>
     </Flex>
   );
-}
-
-// Extract active chat id from pathname
-function extractActiveChatId(pathname: string) {
-  return pathname.startsWith("/ui/chat/")
-    ? pathname.slice("/ui/chat/".length)
-    : null;
 }

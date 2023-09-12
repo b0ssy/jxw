@@ -25,7 +25,7 @@ function App() {
               {/* Routes when logged in */}
               {isLoggedIn && (
                 <>
-                  <Route path={`${ROUTES.home}/*`} element={<Home />} />
+                  <Route path={`${ROUTES.home}/chat?/:id?`} element={<Home />} />
                   <Route path="*" element={<Navigate to={ROUTES.home} />} />
                 </>
               )}
