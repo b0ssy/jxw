@@ -6,6 +6,9 @@ import { ENV } from "../config";
 // Default GPT model to use
 export const MODEL = "gpt-3.5-turbo";
 
+// Default temperature to use
+export const TEMPERATURE = 0.2;
+
 // Number of chunks to send in a batch
 export const SEND_CHUNK_BATCH_COUNT = 5;
 
@@ -32,13 +35,14 @@ export class ChatGPT {
   chatComplete = async (
     chatId: string,
     messages: ChatGPTMessage[],
-    model = MODEL
+    model = MODEL,
+    temperature = TEMPERATURE
   ) => {
     const stream = await this.openai.chat.completions.create({
       messages,
       model,
       stream: true,
-      temperature: 0.2,
+      temperature,
     });
 
     // Read chunk by chunk and emit to clients
