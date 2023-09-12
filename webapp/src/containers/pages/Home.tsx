@@ -479,7 +479,7 @@ export default function Home() {
       >
         <div>
           {/* Messages */}
-          {activeChat?.messages.length && (
+          {!!activeChat?.messages.length && (
             <>
               <div className="Home-chat-window-message-container">
                 {activeChat?.messages.map((message, index) => {
