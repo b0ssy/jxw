@@ -82,13 +82,13 @@ export default function Home() {
       setChats(chats);
 
       // If no active chat selected, then set first chat as active
-      const currentActiveChatId = extractActiveChatId(window.location.pathname);
-      if (!currentActiveChatId && chats.length) {
-        navigate(`/ui/chat/${chats[0]._id}`);
+      // const currentActiveChatId = extractActiveChatId(window.location.pathname);
+      // if (!currentActiveChatId && chats.length) {
+      //   navigate(`/ui/chat/${chats[0]._id}`);
 
-        // Focus on message box
-        messageInputRef.current?.focus();
-      }
+      //   // Focus on message box
+      //   messageInputRef.current?.focus();
+      // }
     });
   }, [backend]);
 
