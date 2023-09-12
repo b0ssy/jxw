@@ -1,5 +1,5 @@
 import { Fragment, useRef, useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import {
   Flex,
@@ -36,6 +36,7 @@ import {
   V1ChatsIdMessagesGet200ResponseData,
 } from "../../lib/backend/api";
 import { ChatClient } from "../../lib/chat-client";
+import { sleepFn1000ms } from "../../lib/utils";
 import { useSelector, useDispatch } from "../../redux/store";
 import { ROUTES } from "../../routes";
 import "./Home.css";
@@ -71,27 +72,24 @@ export default function Home() {
 
   // Get all chats at start
   useEffect(() => {
-    setTimeout(() => {
-      backend
-        .createChatApi()
-        .v1ChatsGet()
-        .then((res) => {
-          // Chats should be already sorted by created date in descending order
-          const chats = res.data.data.data;
-          setChats(chats);
+    sleepFn1000ms(backend.createChatApi().v1ChatsGet()).then((res) => {
+      if (!res) {
+        return;
+      }
 
-          // If no active chat selected, then set first chat as active
-          const currentActiveChatId = extractActiveChatId(
-            window.location.pathname
-          );
-          if (!currentActiveChatId && chats.length) {
-            navigate(`/ui/chat/${chats[0]._id}`);
+      // Chats should be already sorted by created date in descending order
+      const chats = res.data.data.data;
+      setChats(chats);
 
-            // Focus on message box
-            messageInputRef.current?.focus();
-          }
-        });
-    }, 1000);
+      // If no active chat selected, then set first chat as active
+      const currentActiveChatId = extractActiveChatId(window.location.pathname);
+      if (!currentActiveChatId && chats.length) {
+        navigate(`/ui/chat/${chats[0]._id}`);
+
+        // Focus on message box
+        messageInputRef.current?.focus();
+      }
+    });
   }, [backend]);
 
   // Load active chat messages
