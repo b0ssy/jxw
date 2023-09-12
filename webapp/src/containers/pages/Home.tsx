@@ -288,15 +288,9 @@ export default function Home() {
     if (activeChatId === id) {
       // Clear the active chat
       setActiveChat(null);
-
-      // Navigate to the first chat if available
-      if (newChats.length) {
-        navigate(`${ROUTES.home}/chat/${newChats[0]._id}`);
-      }
-      // Otherwise, navigate to root
-      else {
-        navigate(ROUTES.home);
-      }
+      
+      // New chat
+      navigate(ROUTES.home);
     }
   }
 
@@ -561,7 +555,8 @@ export default function Home() {
           )}
 
           {/* Empty message placeholder */}
-          {(chats && !activeChatId) ||
+          {!activeChatId ||
+          (chats && !activeChatId) ||
           (activeChat && !activeChat.messages.length) ? (
             <Flex
               direction="column"
