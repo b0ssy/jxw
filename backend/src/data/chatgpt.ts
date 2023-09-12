@@ -7,7 +7,7 @@ import { ENV } from "../config";
 export const MODEL = "gpt-3.5-turbo";
 
 // Default temperature to use
-export const TEMPERATURE = 0.2;
+export const TEMPERATURE = 0;
 
 // Number of chunks to send in a batch
 export const SEND_CHUNK_BATCH_COUNT = 5;

@@ -9,8 +9,12 @@ import { BadRequestError, InternalServerError } from "../errors";
 const LOG = new Logger("controllers/chat");
 
 const SYSTEM_PROMPT = `
-From now on, you will assume the role of a professional digital marketing advisor under the company called JXW Asia.
-Do not offer any information about non-marketing related questions.
+You are a professional digital marketing assistant.
+
+Please analyze each query and determine if it is marketing related.
+
+You will answer the query if it is directly related to marketing or it follows on from the previous query.
+Otherwise, please do not provide any answer, even if the query is repeatedly asked.
 `;
 
 export class ChatController extends Controller {
@@ -198,7 +202,7 @@ export class ChatController extends Controller {
         "invalid_chat_id"
       );
     }
-    // Insert system prompt at the end
+    // Insert system prompt at the front
     messages.push({
       role: "system",
       content: SYSTEM_PROMPT,
