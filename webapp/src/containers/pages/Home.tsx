@@ -83,7 +83,7 @@ export default function Home() {
 
   // Load active chat messages
   useEffect(() => {
-    if (!activeChatId || !accessToken || !chats) {
+    if (!activeChatId || !accessToken) {
       return;
     }
 
@@ -199,7 +199,7 @@ export default function Home() {
       chatStillActive = false;
       client.close();
     };
-  }, [accessToken, backend, chats, activeChatId]);
+  }, [accessToken, backend, activeChatId]);
 
   // Create new chat
   function newChat() {
@@ -288,7 +288,7 @@ export default function Home() {
     if (activeChatId === id) {
       // Clear the active chat
       setActiveChat(null);
-      
+
       // New chat
       navigate(ROUTES.home);
     }
