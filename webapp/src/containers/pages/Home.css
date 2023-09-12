@@ -61,6 +61,9 @@
 .Home-chat-window-message-container {
   padding: 0 16px;
 }
+.Home-chat-window-message-card {
+  max-width: 80%;
+}
 .Home-chat-window-message-placeholder {
   height: 150px;
 }

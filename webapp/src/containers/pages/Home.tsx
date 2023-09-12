@@ -62,7 +62,6 @@ export default function Home() {
   const [chats, setChats] = useState<V1ChatsGet200ResponseData["data"] | null>(
     null
   );
-  const [loadingActiveChat, setLoadingActiveChat] = useState(false);
 
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
   const messageInputRef = useRef<HTMLInputElement | null>(null);
@@ -71,26 +70,27 @@ export default function Home() {
 
   // Get all chats at start
   useEffect(() => {
-    backend
-      .createChatApi()
-      .v1ChatsGet()
-      .then((res) => {
-        // Chats should be already sorted by created date in descending order
-        const chats = res.data.data.data;
-        setChats(chats);
+    setTimeout(() => {
+      backend
+        .createChatApi()
+        .v1ChatsGet()
+        .then((res) => {
+          // Chats should be already sorted by created date in descending order
+          const chats = res.data.data.data;
+          setChats(chats);
 
-        // If no active chat selected, then set first chat as active
-        const currentActiveChatId = extractActiveChatId(
-          window.location.pathname
-        );
-        if (!currentActiveChatId && chats.length) {
-          setLoadingActiveChat(true);
-          navigate(`/ui/chat/${chats[0]._id}`);
+          // If no active chat selected, then set first chat as active
+          const currentActiveChatId = extractActiveChatId(
+            window.location.pathname
+          );
+          if (!currentActiveChatId && chats.length) {
+            navigate(`/ui/chat/${chats[0]._id}`);
 
-          // Focus on message box
-          messageInputRef.current?.focus();
-        }
-      });
+            // Focus on message box
+            messageInputRef.current?.focus();
+          }
+        });
+    }, 1000);
   }, [backend]);
 
   // Load active chat messages
@@ -98,9 +98,6 @@ export default function Home() {
     if (!activeChatId || !accessToken) {
       return;
     }
-
-    // Load the active chat
-    setLoadingActiveChat(true);
 
     // Flag to indicate whether the chat is still active after response is received
     let chatStillActive = true;
@@ -114,8 +111,6 @@ export default function Home() {
         if (!chatStillActive) {
           return;
         }
-
-        setLoadingActiveChat(false);
 
         switch (event.type) {
           // Latest chat response from ChatGPT
@@ -200,6 +195,14 @@ export default function Home() {
 
       // Connect to websocket now
       client.connect();
+
+      // Scroll to bottom
+      // Trigger a while later to ensure message is rendered
+      setTimeout(() => {
+        if (chatWindowRef.current) {
+          chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
+        }
+      }, 0);
     }
 
     getChat(activeChatId);
@@ -228,7 +231,6 @@ export default function Home() {
 
     // Clear current active chat
     setActiveChat(null);
-    setLoadingActiveChat(true);
 
     // Navigate to active chat
     navigate(`/ui/chat/${chat._id}`);
@@ -280,12 +282,9 @@ export default function Home() {
     // Trigger a while later to ensure message is rendered
     setTimeout(() => {
       if (chatWindowRef.current) {
-        chatWindowRef.current.scrollBy({
-          top: chatWindowRef.current.scrollHeight,
-          behavior: "smooth",
-        });
+        chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
       }
-    }, 100);
+    }, 0);
   }
 
   // Delete chat
@@ -414,6 +413,8 @@ export default function Home() {
               </Card>
             );
           })}
+
+          {/* No chats notice */}
           {chats && !chats.length && (
             <>
               <ChatBubbleIcon width="72px" height="72px" color="gray" />
@@ -502,6 +503,7 @@ export default function Home() {
                       justify={message.role === "assistant" ? "start" : "end"}
                     >
                       <Card
+                        className="Home-chat-window-message-card"
                         my="2"
                         style={{
                           backgroundColor:
@@ -510,10 +512,8 @@ export default function Home() {
                               : irisDark.iris4,
                         }}
                       >
-                        <Flex
-                          direction="column"
-                          align={message.role === "assistant" ? "start" : "end"}
-                        >
+                        {/* Message content */}
+                        <div>
                           {message.content
                             .split("\n")
                             .map((sentence, index) => (
@@ -522,10 +522,12 @@ export default function Home() {
                                 {!sentence && <br />}
                               </Fragment>
                             ))}
-                        </Flex>
+                        </div>
+
                         <div style={{ height: "4px" }} />
+
+                        {/* Date/time */}
                         <Flex
-                          direction="column"
                           align={message.role === "assistant" ? "start" : "end"}
                         >
                           <Text size="1" color="gray">
@@ -537,6 +539,7 @@ export default function Home() {
                   );
                 })}
               </div>
+
               {activeChat?.status === "running" && <ChatBubble />}
 
               {/* Empty bottom placeholder */}
@@ -545,20 +548,21 @@ export default function Home() {
           )}
 
           {/* Empty message placeholder */}
-          {chats && !activeChat?.messages.length && !loadingActiveChat && (
-            <Flex
-              direction="column"
-              align="center"
-              justify="center"
-              gap="4"
-              height="100%"
-            >
-              <Text size="4" color="gray" align="center">
-                Start chatting with our digital marketing advisor!
-              </Text>
-              <ArrowDownIcon width="72px" height="72px" color="gray" />
-            </Flex>
-          )}
+          {!activeChatId ||
+            (activeChat && !activeChat.messages.length && (
+              <Flex
+                direction="column"
+                align="center"
+                justify="center"
+                gap="4"
+                height="100%"
+              >
+                <Text size="4" color="gray" align="center">
+                  Start chatting with our digital marketing advisor!
+                </Text>
+                <ArrowDownIcon width="72px" height="72px" color="gray" />
+              </Flex>
+            ))}
 
           {/* Blur effect */}
           <Flex
@@ -639,7 +643,7 @@ export default function Home() {
               </Button>
             </DropdownMenu.Trigger>
 
-            <DropdownMenu.Content align='end'>
+            <DropdownMenu.Content align="end">
               {/* Open GitHub tab */}
               <DropdownMenu.Item onClick={openGitHub}>
                 GitHub
