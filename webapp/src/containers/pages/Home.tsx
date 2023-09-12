@@ -69,7 +69,7 @@ export default function Home() {
 
   const activeChatId = extractActiveChatId(location.pathname);
 
-  // Query for all chats initially
+  // Get all chats at start
   useEffect(() => {
     backend
       .createChatApi()
@@ -166,25 +166,43 @@ export default function Home() {
       },
     });
 
-    // Get chat and its messages
-    Promise.all([
-      backend.createChatApi().v1ChatsIdGet({ id: activeChatId }),
-      backend.createChatApi().v1ChatsIdMessagesGet({ id: activeChatId }),
-    ]).then((results) => {
-      // Chat no longer active, discard response
+    async function getChat(chatId: string) {
+      // Ignore if chat is no longer active
+      if (!chatStillActive) {
+        return;
+      }
+
+      // Get chat
+      const chatRes = await backend
+        .createChatApi()
+        .v1ChatsIdGet({ id: chatId });
+      const chat = chatRes.data.data;
+
+      // Ignore if chat is no longer active
+      if (!chatStillActive) {
+        return;
+      }
+
+      // Get chat messages
+      // Use cache if available
+      const messagesRes = await backend
+        .createChatApi()
+        .v1ChatsIdMessagesGet({ id: chatId });
+      const messages = messagesRes.data.data.data;
+
+      // Ignore if chat is no longer active
       if (!chatStillActive) {
         return;
       }
 
       // Set active chat
-      setActiveChat({
-        ...results[0].data.data,
-        messages: results[1].data.data.data,
-      });
+      setActiveChat({ ...chat, messages });
 
       // Connect to websocket now
       client.connect();
-    });
+    }
+
+    getChat(activeChatId);
 
     return () => {
       chatStillActive = false;
@@ -617,15 +635,15 @@ export default function Home() {
             <DropdownMenu.Trigger>
               <Button variant="outline" size="2">
                 <PersonIcon />
-                Account
                 <CaretDownIcon />
               </Button>
             </DropdownMenu.Trigger>
 
-            <DropdownMenu.Content className="Home-account-menu">
+            <DropdownMenu.Content align='end'>
               {/* Open GitHub tab */}
               <DropdownMenu.Item onClick={openGitHub}>
                 GitHub
+                <span style={{ width: "8px" }} />
                 <GitHubLogoIcon />
               </DropdownMenu.Item>
 
@@ -634,6 +652,7 @@ export default function Home() {
               {/* Logout */}
               <DropdownMenu.Item color="red" onClick={logout}>
                 Logout
+                <span style={{ width: "8px" }} />
                 <ExitIcon />
               </DropdownMenu.Item>
             </DropdownMenu.Content>
