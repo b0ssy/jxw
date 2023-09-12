@@ -9,6 +9,7 @@ import Home from "./containers/pages/Home";
 import Login from "./containers/pages/Login";
 import { Backend } from "./lib/backend";
 import { useSelector } from "./redux/store";
+import "react-loading-skeleton/dist/skeleton.css";
 
 function App() {
   const themeMode = useSelector((state) => state.app.themeMode);

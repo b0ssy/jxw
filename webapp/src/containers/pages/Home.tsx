@@ -1,5 +1,6 @@
 import { Fragment, useRef, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import {
   Flex,
   Card,
@@ -25,7 +26,7 @@ import {
   ExitIcon,
   HamburgerMenuIcon,
 } from "@radix-ui/react-icons";
-import { tealDark, irisDark } from "@radix-ui/colors";
+import { tealDark, irisDark, grayDark } from "@radix-ui/colors";
 import moment from "moment";
 
 import ChatBubble from "../../components/ChatBubble";
@@ -337,11 +338,12 @@ export default function Home() {
         <Flex
           className="Home-chats"
           direction="column"
-          align={!chats?.length ? "center" : undefined}
-          justify={!chats?.length ? "center" : undefined}
+          align={chats && !chats.length ? "center" : undefined}
+          justify={chats && !chats.length ? "center" : undefined}
           grow="1"
           my="2"
         >
+          {/* List of chats */}
           {chats?.map((chat) => {
             return (
               <Card
@@ -413,6 +415,25 @@ export default function Home() {
               </Card>
             );
           })}
+
+          {/* Show skeleton while chats are loading */}
+          {!chats && (
+            <SkeletonTheme
+              baseColor={grayDark.gray3}
+              highlightColor={grayDark.gray2}
+            >
+              {Array.from(new Array(5)).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  width="100%"
+                  height="36px"
+                  borderRadius="8px"
+                  duration={0.75}
+                  style={{ margin: "8px 0" }}
+                />
+              ))}
+            </SkeletonTheme>
+          )}
 
           {/* No chats notice */}
           {chats && !chats.length && (
