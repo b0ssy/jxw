@@ -46,10 +46,10 @@ export type Message = Omit<
   V1ChatsIdMessagesGet200ResponseData["data"][0],
   "chatId" | "userId"
 >;
+export type ActiveChat = Chat & { messages: Message[] };
 
 export default function Home() {
   const accessToken = useSelector((state) => state.app.accessToken);
-  const dispatch = useDispatch();
 
   const navigate = useNavigate();
   const { id: activeChatId } = useParams();
@@ -58,9 +58,7 @@ export default function Home() {
 
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
   const [message, setMessage] = useState("");
-  const [activeChat, setActiveChat] = useState<
-    (Chat & { messages: Message[] }) | null
-  >(null);
+  const [activeChat, setActiveChat] = useState<ActiveChat | null>(null);
   const [chats, setChats] = useState<V1ChatsGet200ResponseData["data"] | null>(
     null
   );
@@ -212,8 +210,8 @@ export default function Home() {
   }
 
   // Select chat
-  function selectChat(chat: Chat) {
-    if (chat._id === activeChatId) {
+  function selectChat(id: string) {
+    if (id === activeChatId) {
       return;
     }
 
@@ -221,7 +219,26 @@ export default function Home() {
     setActiveChat(null);
 
     // Navigate to active chat
-    navigate(`/ui/chat/${chat._id}`);
+    navigate(`/ui/chat/${id}`);
+  }
+
+  // Delete chat
+  function deleteChat(id: string) {
+    // Delete chat
+    backend.createChatApi().v1ChatsIdDelete({ id });
+
+    // Remove from chats list
+    const newChats = chats?.filter((chat) => chat._id !== id) ?? [];
+    setChats(newChats);
+
+    // If deleted chat is active chat
+    if (activeChatId === id) {
+      // Clear the active chat
+      setActiveChat(null);
+
+      // New chat
+      navigate(ROUTES.home);
+    }
   }
 
   // Send chat message
@@ -275,39 +292,10 @@ export default function Home() {
     }, 0);
   }
 
-  // Delete chat
-  function deleteChat(id: string) {
-    // Delete chat
-    backend.createChatApi().v1ChatsIdDelete({ id });
-
-    // Remove from chats list
-    const newChats = chats?.filter((chat) => chat._id !== id) ?? [];
-    setChats(newChats);
-
-    // If deleted chat is active chat
-    if (activeChatId === id) {
-      // Clear the active chat
-      setActiveChat(null);
-
-      // New chat
-      navigate(ROUTES.home);
-    }
-  }
-
-  // Open GitHub link in new tab
-  function openGitHub() {
-    window.open("https://github.com/b0ssy/jxw");
-  }
-
-  // Logout account
-  function logout() {
-    dispatch({ type: "app/LOGOUT" });
-  }
-
   return (
     <Flex className="Home-root" direction="row">
-      {/* Chat left panel */}
-      <Flex className="Home-left-panel" direction="column">
+      {/* Chats panel */}
+      <Flex className="Home-chats-panel" direction="column">
         {/* New chat */}
         <Button
           className="Home-new-chat"
@@ -321,312 +309,46 @@ export default function Home() {
         </Button>
 
         {/* Chats */}
-        <Flex
-          className="Home-chats"
-          direction="column"
-          align={chats && !chats.length ? "center" : undefined}
-          justify={chats && !chats.length ? "center" : undefined}
-          grow="1"
-          my="2"
-        >
-          {/* List of chats */}
-          {chats?.map((chat) => {
-            return (
-              <Card
-                key={chat._id}
-                className="Home-chats-message noselect"
-                variant={activeChatId === chat._id ? "surface" : "ghost"}
-                title={chat.summary}
-                onClick={() => selectChat(chat)}
-              >
-                <Flex gap="2" align="center">
-                  <Text
-                    className="Home-chats-message-text"
-                    as="div"
-                    size="2"
-                    weight={activeChatId === chat._id ? "bold" : undefined}
-                  >
-                    {chat.summary}
-                  </Text>
-
-                  {/* Delete chat dialog */}
-                  <AlertDialog.Root>
-                    <AlertDialog.Trigger>
-                      <IconButton
-                        variant="soft"
-                        color="red"
-                        size="1"
-                        style={{
-                          visibility:
-                            activeChatId !== chat._id ? "hidden" : undefined,
-                        }}
-                      >
-                        <TrashIcon />
-                      </IconButton>
-                    </AlertDialog.Trigger>
-
-                    {/* Dialog content */}
-                    <AlertDialog.Content style={{ maxWidth: 450 }}>
-                      <AlertDialog.Title>Delete Chat</AlertDialog.Title>
-                      <AlertDialog.Description size="2">
-                        <Em>{chat.summary}</Em>
-                        <br />
-                        <br />
-                        Are you sure you want to delete the chat above?
-                      </AlertDialog.Description>
-                      <Flex gap="3" mt="4" justify="end">
-                        {/* Cancel deletion */}
-                        <AlertDialog.Cancel>
-                          <Button variant="soft" color="gray">
-                            Cancel
-                          </Button>
-                        </AlertDialog.Cancel>
-
-                        {/* Delete button */}
-                        <AlertDialog.Action>
-                          <Button
-                            variant="solid"
-                            color="red"
-                            onClick={() => {
-                              deleteChat(chat._id);
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </AlertDialog.Action>
-                      </Flex>
-                    </AlertDialog.Content>
-                  </AlertDialog.Root>
-                </Flex>
-              </Card>
-            );
-          })}
-
-          {/* Show skeleton while chats are loading */}
-          {!chats && (
-            <SkeletonTheme
-              baseColor={grayDark.gray3}
-              highlightColor={grayDark.gray2}
-            >
-              {Array.from(new Array(5)).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  width="100%"
-                  height="36px"
-                  borderRadius="8px"
-                  duration={0.75}
-                  style={{ margin: "8px 0" }}
-                />
-              ))}
-            </SkeletonTheme>
-          )}
-
-          {/* No chats notice */}
-          {chats && !chats.length && (
-            <>
-              <ChatBubbleIcon width="72px" height="72px" color="gray" />
-              <div style={{ height: "16px" }} />
-              <Text color="gray">You have no chats yet</Text>
-            </>
-          )}
-        </Flex>
+        <Chats
+          chats={chats}
+          activeChatId={activeChatId}
+          onSelect={(chat) => {
+            selectChat(chat._id);
+          }}
+          onDelete={(chat) => {
+            deleteChat(chat._id);
+          }}
+        />
 
         {/* Settings panel */}
         <Flex className="Home-settings-panel" gap="2">
           {/* Account menu */}
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              <Button
-                className="Home-account-button"
-                variant="outline"
-                size="3"
-              >
-                <PersonIcon />
-                Account
-                <Flex grow="1" />
-                <CaretUpIcon />
-              </Button>
-            </DropdownMenu.Trigger>
-
-            <DropdownMenu.Content className="Home-account-menu">
-              {/* Open GitHub tab */}
-              <DropdownMenu.Item onClick={openGitHub}>
-                GitHub
-                <GitHubLogoIcon />
-              </DropdownMenu.Item>
-
-              <DropdownMenu.Separator />
-
-              {/* Logout */}
-              <DropdownMenu.Item color="red" onClick={logout}>
-                Logout
-                <ExitIcon />
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
+          <AccountMenu />
         </Flex>
       </Flex>
 
       {/* Chat window */}
-      <Flex
-        ref={chatWindowRef}
-        className="Home-chat-window"
-        direction="column"
-        align="center"
-        justify="center"
-        width="100%"
-        height="100%"
-      >
-        <div>
-          {/* Messages */}
-          {!!activeChat?.messages.length && (
-            <>
-              <div className="Home-chat-window-message-container">
-                {activeChat?.messages.map((message, index) => {
-                  if (message.role !== "assistant" && message.role !== "user") {
-                    return null;
-                  }
-                  const now = moment();
-                  const date = moment(message.createdAt);
-                  const dateStr =
-                    activeChat.status === "idle" ||
-                    message.role === "user" ||
-                    index < activeChat.messages.length - 1
-                      ? `${
-                          // today
-                          +now.clone().startOf("day") ===
-                          +date.clone().startOf("day")
-                            ? " "
-                            : // yesterday
-                            +now.clone().subtract(1, "day").startOf("day") ===
-                              +date.clone().startOf("day")
-                            ? "yesterday, "
-                            : `${date.format("D MMM YY")}, `
-                        }${date.format("h:mm a")}`
-                      : "";
-                  return (
-                    <Flex
-                      key={index}
-                      justify={message.role === "assistant" ? "start" : "end"}
-                    >
-                      <Card
-                        className="Home-chat-window-message-card"
-                        my="2"
-                        style={{
-                          backgroundColor:
-                            message.role === "assistant"
-                              ? tealDark.teal4
-                              : irisDark.iris4,
-                        }}
-                      >
-                        {/* Message content */}
-                        <div>
-                          {message.content
-                            .split("\n")
-                            .map((sentence, index) => (
-                              <Fragment key={index}>
-                                {sentence && <div>{sentence}</div>}
-                                {!sentence && <br />}
-                              </Fragment>
-                            ))}
-                        </div>
-
-                        <div style={{ height: "4px" }} />
-
-                        {/* Date/time */}
-                        <Flex
-                          align={message.role === "assistant" ? "start" : "end"}
-                        >
-                          <Text size="1" color="gray">
-                            {dateStr}
-                          </Text>
-                        </Flex>
-                      </Card>
-                    </Flex>
-                  );
-                })}
-              </div>
-
-              {activeChat?.status === "running" && <ChatBubble />}
-
-              {/* Empty bottom placeholder */}
-              <div className="Home-chat-window-message-placeholder" />
-            </>
-          )}
-
-          {/* Empty message placeholder */}
-          {!activeChatId ||
-          (chats && !activeChatId) ||
-          (activeChat && !activeChat.messages.length) ? (
-            <Flex
-              direction="column"
-              align="center"
-              justify="center"
-              gap="4"
-              height="100%"
-            >
-              <Text size="4" color="gray" align="center">
-                Start chatting with our digital marketing advisor!
-              </Text>
-              <ArrowDownIcon width="72px" height="72px" color="gray" />
-            </Flex>
-          ) : null}
-
-          {/* Blur effect */}
-          <Flex
-            className="Home-chat-window-blur-effect"
-            position="fixed"
-            grow="1"
-            width="100%"
-            align="center"
-          />
-
-          {/* Message box */}
-          <Flex
-            className="Home-message-box"
-            position="fixed"
-            grow="1"
-            width="100%"
-            align="center"
-          >
-            <TextField.Root>
-              <TextField.Input
-                ref={messageInputRef}
-                size="3"
-                autoFocus
-                disabled={activeChat?.status === "running"}
-                placeholder={
-                  activeChat?.status === "running"
-                    ? "Waiting for reply..."
-                    : "Send a message"
-                }
-                value={message}
-                onChange={(e) => {
-                  setMessage(e.target.value);
-                }}
-                onKeyUp={(e) => {
-                  if (e.key === "Enter" && message) {
-                    sendMessage();
-                  }
-                }}
-              />
-              <TextField.Slot>
-                <IconButton disabled={!message} onClick={sendMessage}>
-                  <PaperPlaneIcon />
-                </IconButton>
-              </TextField.Slot>
-            </TextField.Root>
-          </Flex>
-        </div>
-      </Flex>
+      <ChatWindow
+        chatWindowRef={chatWindowRef}
+        messageInputRef={messageInputRef}
+        message={message}
+        chats={chats}
+        activeChatId={activeChatId}
+        activeChat={activeChat}
+        onMessageChange={setMessage}
+        onSendMessage={sendMessage}
+      />
 
       {/* Chat header (mobile only) */}
       <Flex direction="column" className="Home-mobile-header">
         <Flex grow="1" align="center">
+          {/* Menu icon button to open/close drawer */}
           <IconButton
             variant="ghost"
             size="2"
-            onClick={() => setOpenMobileDrawer(!openMobileDrawer)}
+            onClick={() => {
+              setOpenMobileDrawer(!openMobileDrawer);
+            }}
           >
             <HamburgerMenuIcon width="20px" height="20px" />
           </IconButton>
@@ -643,133 +365,388 @@ export default function Home() {
           <Flex grow="1" />
 
           {/* Account menu */}
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              <Button variant="outline" size="2">
-                <PersonIcon />
-                <CaretDownIcon />
-              </Button>
-            </DropdownMenu.Trigger>
-
-            <DropdownMenu.Content align="end">
-              {/* Open GitHub tab */}
-              <DropdownMenu.Item onClick={openGitHub}>
-                GitHub
-                <span style={{ width: "8px" }} />
-                <GitHubLogoIcon />
-              </DropdownMenu.Item>
-
-              <DropdownMenu.Separator />
-
-              {/* Logout */}
-              <DropdownMenu.Item color="red" onClick={logout}>
-                Logout
-                <span style={{ width: "8px" }} />
-                <ExitIcon />
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
+          <AccountMenu mobile />
         </Flex>
         <Separator size="4" />
       </Flex>
 
-      {/* Chat left drawer (mobile only) */}
+      {/* Chats drawer (mobile only) */}
       <Flex
         className="Home-mobile-left-drawer"
         style={{ display: !openMobileDrawer ? "none" : undefined }}
       >
         {/* Chats */}
-        <Flex
-          className="Home-chats"
-          direction="column"
-          align={!chats?.length ? "center" : undefined}
-          justify={!chats?.length ? "center" : undefined}
-          grow="1"
-          my="2"
-        >
-          {chats?.map((chat) => {
-            return (
-              <Card
-                key={chat._id}
-                className="Home-chats-message"
-                variant={activeChatId === chat._id ? "surface" : "ghost"}
-                title={chat.summary}
-                onClick={() => {
-                  selectChat(chat);
-                  setOpenMobileDrawer(false);
-                }}
-              >
-                <Flex gap="2" align="center">
-                  <Text
-                    className="Home-chats-message-text"
-                    as="div"
-                    size="2"
-                    weight={activeChatId === chat._id ? "bold" : undefined}
-                  >
-                    {chat.summary}
-                  </Text>
-
-                  {/* Delete chat dialog */}
-                  <AlertDialog.Root>
-                    <AlertDialog.Trigger>
-                      <IconButton
-                        variant="soft"
-                        color="red"
-                        size="1"
-                        style={{
-                          visibility:
-                            activeChatId !== chat._id ? "hidden" : undefined,
-                        }}
-                      >
-                        <TrashIcon />
-                      </IconButton>
-                    </AlertDialog.Trigger>
-
-                    {/* Dialog content */}
-                    <AlertDialog.Content style={{ maxWidth: 450 }}>
-                      <AlertDialog.Title>Delete Chat</AlertDialog.Title>
-                      <AlertDialog.Description size="2">
-                        <Em>{chat.summary}</Em>
-                        <br />
-                        <br />
-                        Are you sure you want to delete the chat above?
-                      </AlertDialog.Description>
-                      <Flex gap="3" mt="4" justify="end">
-                        {/* Cancel deletion */}
-                        <AlertDialog.Cancel>
-                          <Button variant="soft" color="gray">
-                            Cancel
-                          </Button>
-                        </AlertDialog.Cancel>
-
-                        {/* Delete button */}
-                        <AlertDialog.Action>
-                          <Button
-                            variant="solid"
-                            color="red"
-                            onClick={() => {
-                              deleteChat(chat._id);
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </AlertDialog.Action>
-                      </Flex>
-                    </AlertDialog.Content>
-                  </AlertDialog.Root>
-                </Flex>
-              </Card>
-            );
-          })}
-          {chats && !chats.length && (
-            <>
-              <ChatBubbleIcon width="72px" height="72px" color="gray" />
-              <div style={{ height: "16px" }} />
-              <Text color="gray">You have no chats yet</Text>
-            </>
-          )}
-        </Flex>
+        <Chats
+          chats={chats}
+          activeChatId={activeChatId}
+          onSelect={(chat) => {
+            selectChat(chat._id);
+            setOpenMobileDrawer(false);
+          }}
+          onDelete={(chat) => {
+            deleteChat(chat._id);
+          }}
+        />
       </Flex>
     </Flex>
+  );
+}
+
+// Show list of chats on the left panel
+function Chats(props: {
+  chats: V1ChatsGet200ResponseData["data"] | null;
+  activeChatId?: string;
+  onSelect: (chat: Chat) => void;
+  onDelete: (chat: Chat) => void;
+}) {
+  const { chats, activeChatId, onSelect, onDelete } = props;
+  return (
+    <Flex
+      className="Home-Chats"
+      direction="column"
+      align={chats && !chats.length ? "center" : undefined}
+      justify={chats && !chats.length ? "center" : undefined}
+      grow="1"
+      my="2"
+    >
+      {/* List of chats */}
+      {chats?.map((chat) => {
+        return (
+          <Card
+            key={chat._id}
+            className="Home-Chats-card noselect"
+            variant={activeChatId === chat._id ? "surface" : "ghost"}
+            title={chat.summary}
+            onClick={() => {
+              onSelect(chat);
+            }}
+          >
+            <Flex gap="2" align="center">
+              {/* Chat summary */}
+              <Text
+                className="Home-Chats-card-summary"
+                as="div"
+                size="2"
+                weight={activeChatId === chat._id ? "bold" : undefined}
+              >
+                {chat.summary}
+              </Text>
+
+              {/* Delete chat dialog */}
+              <AlertDialog.Root>
+                <AlertDialog.Trigger
+                  onClick={(e) => {
+                    // Prevent triggering Card onClick event
+                    e.stopPropagation();
+                  }}
+                >
+                  <IconButton
+                    variant="soft"
+                    color="red"
+                    size="1"
+                    style={{
+                      visibility:
+                        activeChatId !== chat._id ? "hidden" : undefined,
+                    }}
+                  >
+                    <TrashIcon />
+                  </IconButton>
+                </AlertDialog.Trigger>
+
+                {/* Dialog content */}
+                <AlertDialog.Content
+                  style={{ maxWidth: 450 }}
+                  onClick={(e) => {
+                    // Prevent triggering Card onClick event
+                    e.stopPropagation();
+                  }}
+                >
+                  <AlertDialog.Title>Delete Chat</AlertDialog.Title>
+                  <AlertDialog.Description size="2">
+                    <Em>{chat.summary}</Em>
+                    <br />
+                    <br />
+                    Are you sure you want to delete the chat above?
+                  </AlertDialog.Description>
+                  <Flex gap="3" mt="4" justify="end">
+                    {/* Cancel deletion */}
+                    <AlertDialog.Cancel>
+                      <Button variant="soft" color="gray">
+                        Cancel
+                      </Button>
+                    </AlertDialog.Cancel>
+
+                    {/* Delete button */}
+                    <AlertDialog.Action>
+                      <Button
+                        variant="solid"
+                        color="red"
+                        onClick={() => {
+                          onDelete(chat);
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </AlertDialog.Action>
+                  </Flex>
+                </AlertDialog.Content>
+              </AlertDialog.Root>
+            </Flex>
+          </Card>
+        );
+      })}
+
+      {/* Show skeleton while chats are loading */}
+      {!chats && (
+        <SkeletonTheme
+          baseColor={grayDark.gray3}
+          highlightColor={grayDark.gray2}
+        >
+          {Array.from(new Array(5)).map((_, index) => (
+            <Skeleton
+              key={index}
+              width="100%"
+              height="36px"
+              borderRadius="8px"
+              duration={0.75}
+              style={{ margin: "8px 0" }}
+            />
+          ))}
+        </SkeletonTheme>
+      )}
+
+      {/* No chats notice */}
+      {chats && !chats.length && (
+        <>
+          <ChatBubbleIcon width="72px" height="72px" color="gray" />
+          <div style={{ height: "16px" }} />
+          <Text color="gray">You have no chats yet</Text>
+        </>
+      )}
+    </Flex>
+  );
+}
+
+// Show the chat conversation window
+function ChatWindow(props: {
+  chatWindowRef: React.MutableRefObject<HTMLDivElement | null>;
+  messageInputRef: React.MutableRefObject<HTMLInputElement | null>;
+  message: string;
+  chats: V1ChatsGet200ResponseData["data"] | null;
+  activeChatId?: string;
+  activeChat: ActiveChat | null;
+  onMessageChange: (message: string) => void;
+  onSendMessage: () => void;
+}) {
+  const {
+    chatWindowRef,
+    messageInputRef,
+    message,
+    chats,
+    activeChatId,
+    activeChat,
+    onMessageChange,
+    onSendMessage,
+  } = props;
+  return (
+    <Flex
+      ref={chatWindowRef}
+      className="Home-ChatWindow"
+      direction="column"
+      align="center"
+      justify="center"
+      width="100%"
+      height="100%"
+    >
+      <div>
+        {/* Messages */}
+        {!!activeChat?.messages.length && (
+          <>
+            <div className="Home-ChatWindow-message-container">
+              {activeChat?.messages.map((message, index) => {
+                if (message.role !== "assistant" && message.role !== "user") {
+                  return null;
+                }
+                const now = moment();
+                const date = moment(message.createdAt);
+                const dateStr =
+                  activeChat.status === "idle" ||
+                  message.role === "user" ||
+                  index < activeChat.messages.length - 1
+                    ? `${
+                        // today
+                        +now.clone().startOf("day") ===
+                        +date.clone().startOf("day")
+                          ? " "
+                          : // yesterday
+                          +now.clone().subtract(1, "day").startOf("day") ===
+                            +date.clone().startOf("day")
+                          ? "yesterday, "
+                          : `${date.format("D MMM YY")}, `
+                      }${date.format("h:mm a")}`
+                    : "";
+                return (
+                  <Flex
+                    key={index}
+                    justify={message.role === "assistant" ? "start" : "end"}
+                  >
+                    <Card
+                      className="Home-ChatWindow-message-card"
+                      my="2"
+                      style={{
+                        backgroundColor:
+                          message.role === "assistant"
+                            ? tealDark.teal4
+                            : irisDark.iris4,
+                      }}
+                    >
+                      {/* Message content */}
+                      <div>
+                        {message.content.split("\n").map((sentence, index) => (
+                          <Fragment key={index}>
+                            {sentence && <div>{sentence}</div>}
+                            {!sentence && <br />}
+                          </Fragment>
+                        ))}
+                      </div>
+
+                      <div style={{ height: "4px" }} />
+
+                      {/* Date/time */}
+                      <Flex
+                        align={message.role === "assistant" ? "start" : "end"}
+                      >
+                        <Text size="1" color="gray">
+                          {dateStr}
+                        </Text>
+                      </Flex>
+                    </Card>
+                  </Flex>
+                );
+              })}
+            </div>
+
+            {activeChat?.status === "running" && <ChatBubble />}
+
+            {/* Empty bottom placeholder */}
+            <div className="Home-ChatWindow-message-placeholder" />
+          </>
+        )}
+
+        {/* Empty message placeholder */}
+        {!activeChatId ||
+        (chats && !activeChatId) ||
+        (activeChat && !activeChat.messages.length) ? (
+          <Flex
+            direction="column"
+            align="center"
+            justify="center"
+            gap="4"
+            height="100%"
+          >
+            <Text size="4" color="gray" align="center">
+              Start chatting with our digital marketing advisor!
+            </Text>
+            <ArrowDownIcon width="72px" height="72px" color="gray" />
+          </Flex>
+        ) : null}
+
+        {/* Blur effect */}
+        <Flex
+          className="Home-ChatWindow-blur-effect"
+          position="fixed"
+          grow="1"
+          width="100%"
+          align="center"
+        />
+
+        {/* Message box */}
+        <Flex
+          className="Home-ChatWindow-message-box"
+          position="fixed"
+          grow="1"
+          width="100%"
+          align="center"
+        >
+          <TextField.Root>
+            <TextField.Input
+              ref={messageInputRef}
+              size="3"
+              autoFocus
+              disabled={activeChat?.status === "running"}
+              placeholder={
+                activeChat?.status === "running"
+                  ? "Waiting for reply..."
+                  : "Send a message"
+              }
+              value={message}
+              onChange={(e) => {
+                onMessageChange(e.target.value);
+              }}
+              onKeyUp={(e) => {
+                if (e.key === "Enter" && message) {
+                  onSendMessage();
+                }
+              }}
+            />
+            <TextField.Slot>
+              <IconButton disabled={!message} onClick={onSendMessage}>
+                <PaperPlaneIcon />
+              </IconButton>
+            </TextField.Slot>
+          </TextField.Root>
+        </Flex>
+      </div>
+    </Flex>
+  );
+}
+
+// Account dropdown menu
+function AccountMenu(props: { mobile?: boolean }) {
+  const dispatch = useDispatch();
+
+  // Open GitHub link in new tab
+  function openGitHub() {
+    window.open("https://github.com/b0ssy/jxw");
+  }
+
+  // Logout account
+  function logout() {
+    dispatch({ type: "app/LOGOUT" });
+  }
+
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger>
+        <Button className="Home-AccountMenu-button" variant="outline" size="3">
+          <PersonIcon />
+          {!props.mobile && (
+            <>
+              Account
+              <Flex grow="1" />
+            </>
+          )}
+          {!props.mobile ? <CaretUpIcon /> : <CaretDownIcon />}
+        </Button>
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Content className="Home-AccountMenu-menu" align="end">
+        {/* Open GitHub tab */}
+        <DropdownMenu.Item onClick={openGitHub}>
+          GitHub
+          <span style={{ width: "8px" }} />
+          <GitHubLogoIcon />
+        </DropdownMenu.Item>
+
+        <DropdownMenu.Separator />
+
+        {/* Logout */}
+        <DropdownMenu.Item color="red" onClick={logout}>
+          Logout
+          <span style={{ width: "8px" }} />
+          <ExitIcon />
+        </DropdownMenu.Item>
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
   );
 }

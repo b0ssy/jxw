@@ -1,6 +1,7 @@
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import "react-loading-skeleton/dist/skeleton.css";
 
 import { ENV } from "./config";
 import { ROUTES } from "./routes";
@@ -9,7 +10,7 @@ import Home from "./containers/pages/Home";
 import Login from "./containers/pages/Login";
 import { Backend } from "./lib/backend";
 import { useSelector } from "./redux/store";
-import "react-loading-skeleton/dist/skeleton.css";
+import "./App.css";
 
 function App() {
   const themeMode = useSelector((state) => state.app.themeMode);
@@ -18,15 +19,20 @@ function App() {
   return (
     <>
       {/* UI */}
-      <Theme appearance={themeMode} style={{ height: "100vh" }}>
+      <Theme className="App-Theme" appearance={themeMode}>
         <Backend baseUrl={ENV.BASE_URL} accessToken={accessToken}>
           <BrowserRouter>
             <Routes>
               {/* Routes when logged in */}
               {isLoggedIn && (
                 <>
+                  {/* Show new chat */}
                   <Route path={ROUTES.home} element={<Home />} />
+
+                  {/* Show specific chat */}
                   <Route path={`${ROUTES.home}/chat/:id`} element={<Home />} />
+
+                  {/* Redirect all others to home */}
                   <Route path="*" element={<Navigate to={ROUTES.home} />} />
                 </>
               )}
@@ -34,7 +40,10 @@ function App() {
               {/* Routes when logged out */}
               {!isLoggedIn && (
                 <>
+                  {/* Login page */}
                   <Route path={ROUTES.login} element={<Login />} />
+
+                  {/* Redirect all others to login page */}
                   <Route path="*" element={<Navigate to={ROUTES.login} />} />
                 </>
               )}
