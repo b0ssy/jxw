@@ -261,16 +261,4 @@ export class ChatController extends Controller {
       result,
     });
   }
-
-  // Post process chat document
-  // - Convert _id to hex string
-  // - Remove system messages
-  postprocessChat(chat: WithId<Chat>) {
-    return {
-      ...chat,
-
-      // Convert to string
-      _id: chat._id.toHexString(),
-    };
-  }
 }
