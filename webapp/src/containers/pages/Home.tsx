@@ -224,6 +224,7 @@ export default function Home() {
 
   // Select chat
   function selectChat(id: string) {
+    // Chat already selected
     if (id === activeChatId) {
       return;
     }
