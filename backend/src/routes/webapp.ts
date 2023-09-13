@@ -6,6 +6,8 @@ import { ENV } from "../config";
 const router = Router();
 
 // Serve webapp
-router.use(["/", "/ui", "/ui/*"], express.static(ENV.WEBAPP_BUILD_DIR));
+router.use("/", express.static(ENV.WEBAPP_BUILD_DIR));
+router.use("/ui", express.static(ENV.WEBAPP_BUILD_DIR));
+router.use("/ui/*", express.static(ENV.WEBAPP_BUILD_DIR));
 
 export default router;
