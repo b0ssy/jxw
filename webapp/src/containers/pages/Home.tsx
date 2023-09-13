@@ -600,6 +600,13 @@ function ChatWindow(props: {
                             : irisDark.iris4,
                       }}
                     >
+                      {/* Assistant name */}
+                      {message.role === "assistant" && (
+                        <Text size="1" weight="bold" color="teal">
+                          ChatGPT 3.5
+                        </Text>
+                      )}
+
                       {/* Message content */}
                       <div>
                         {message.content.split("\n").map((sentence, index) => (
