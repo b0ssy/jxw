@@ -1,41 +1,12 @@
 import { MongoClient, ServerApiVersion } from "mongodb";
-import { z } from "zod";
 
 import { ENV } from "../config";
+import { User } from "../models/user";
+import { Chat } from "../models/chat";
+import { Message } from "../models/message";
 import { Logger } from "../helpers/logger";
 
 const LOG = new Logger("data/db");
-
-// users
-export const zUser = z.object({
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  email: z.string().nullish(),
-  passwordHash: z.string().nullish(),
-});
-export type User = z.infer<typeof zUser>;
-
-// chats
-export const zChat = z.object({
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  userId: z.string(),
-  status: z.enum(["idle", "running"]),
-  summary: z.string(),
-});
-export type Chat = z.infer<typeof zChat>;
-
-// messages
-export const zMessage = z.object({
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  userId: z.string(),
-  chatId: z.string(),
-  role: z.enum(["user", "assistant", "system", "function"]),
-  content: z.string(),
-  result: z.any().nullish(),
-});
-export type Message = z.infer<typeof zMessage>;
 
 // Database options
 export type DatabaseOptions = {

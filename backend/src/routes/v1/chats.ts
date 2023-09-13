@@ -1,7 +1,7 @@
 import { z } from "zod";
 
+import { zChat, zMessage } from "../../models";
 import { Routes } from "../../data";
-import { zChat, zMessage } from "../../data/db";
 import { ChatController } from "../../controllers/chat";
 
 // Routes to manage chats

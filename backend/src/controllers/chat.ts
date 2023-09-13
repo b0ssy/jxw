@@ -1,6 +1,7 @@
 import { ObjectId, WithId } from "mongodb";
 
-import db, { Chat, Message } from "../data/db";
+import { Chat, Message } from "../models";
+import db from "../data/db";
 import chatgpt from "../data/chatgpt";
 import { Controller } from "../data/api";
 import { Logger } from "../helpers/logger";
@@ -11,10 +12,12 @@ const LOG = new Logger("controllers/chat");
 const SYSTEM_PROMPT = `
 You are a professional digital marketing assistant.
 
-Please analyze each query and determine if it is marketing related.
+Analyze your answer and give a score of 1 to 10, where 1 means the question is entirely not marketing-related and a score of 10 means the question is entirely marketing related.
 
-You will answer the query if it is directly related to marketing or it follows on from the previous query.
-Otherwise, please do not provide any answer, even if the query is repeatedly asked.
+If the score is more than or equals to 7, give your answer as usual.
+If the score is less than 7, please kindly ask for question that is related to marketing and do not provide any further help.
+
+Do not entertain repeatedly non-marketing related question.
 `;
 
 export class ChatController extends Controller {
@@ -89,7 +92,7 @@ export class ChatController extends Controller {
       .find({
         userId,
         chatId,
-        
+
         // Only get messages with "user" and "assistant" role
         role: { $in: ["user", "assistant"] },
       })
