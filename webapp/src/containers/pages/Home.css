@@ -63,6 +63,50 @@
 }
 
 /*
+  Chats
+*/
+.Home-Chats {
+  margin-left: 8px;
+
+  /* Always show scrollbar so it won't affect the chats width */
+  overflow-y: scroll;
+}
+.Home-Chats-card {
+  margin: 2px 0;
+  cursor: pointer;
+}
+.Home-Chats-card > .rt-CardInner {
+  padding: 8px 8px 8px 16px;
+}
+.Home-Chats-card-summary {
+  width: calc(100% - 24px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.Home-Chats-group-title {
+  padding: 8px 0 8px 12px;
+  color: var(--gray-10);
+}
+
+/* Style scrollbar in a way it will be hidden even though it is showing */
+.Home-Chats::-webkit-scrollbar {
+  width: 8px;
+}
+.Home-Chats::-webkit-scrollbar-track {
+  background: var(--gray-3);
+}
+.Home-Chats::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+.Home-Chats:hover::-webkit-scrollbar-thumb {
+  background: var(--gray-9);
+}
+.Home-Chats::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-7);
+}
+
+/*
   ChatWindow
 */
 .Home-ChatWindow {
@@ -148,43 +192,6 @@
 }
 .Home-ChatWindow-message-box > .rt-TextFieldRoot > input {
   padding: 24px 16px;
-}
-
-/*
-  Chats
-*/
-.Home-Chats {
-  margin-left: 8px;
-
-  /* Always show scrollbar so it won't affect the chats width */
-  overflow-y: scroll;
-}
-.Home-Chats-card {
-  margin: 2px 0;
-  cursor: pointer;
-}
-.Home-Chats-card-summary {
-  width: calc(100% - 24px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Style scrollbar in a way it will be hidden even though it is showing */
-.Home-Chats::-webkit-scrollbar {
-  width: 8px;
-}
-.Home-Chats::-webkit-scrollbar-track {
-  background: var(--gray-3);
-}
-.Home-Chats::-webkit-scrollbar-thumb {
-  background: transparent;
-}
-.Home-Chats:hover::-webkit-scrollbar-thumb {
-  background: var(--gray-9);
-}
-.Home-Chats::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-7);
 }
 
 /*

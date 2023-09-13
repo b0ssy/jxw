@@ -412,7 +412,88 @@ function Chats(props: {
   onSelect: (chat: Chat) => void;
   onDelete: (chat: Chat) => void;
 }) {
+  const [groupedChats, setGroupedChats] = useState<
+    {
+      title: string;
+      chats: Chats;
+    }[]
+  >([]);
+
   const { chats, activeChatId, onSelect, onDelete } = props;
+
+  // Group chats by:
+  // - today
+  // - yesterday
+  // - this week
+  // - last week
+  // - months
+  useEffect(() => {
+    if (!chats) {
+      setGroupedChats([]);
+      return;
+    }
+
+    const today = moment().startOf("day");
+    const yesterday = moment().subtract(1, "day").startOf("day");
+    const thisWeek = moment().startOf("week");
+    const lastWeek = moment().subtract(1, "week").startOf("week");
+    const todayChats: Chats = [];
+    const yesterdayChats: Chats = [];
+    const thisWeekChats: Chats = [];
+    const lastWeekChats: Chats = [];
+    const otherChats: Chats = [];
+    for (const chat of chats) {
+      const chatDay = moment(chat.createdAt).startOf("day");
+      const chatWeek = moment(chat.createdAt).startOf("week");
+      if (chatDay.isSame(today)) {
+        todayChats.push(chat);
+      } else if (chatDay.isSame(yesterday)) {
+        yesterdayChats.push(chat);
+      } else if (chatWeek.isSame(thisWeek)) {
+        thisWeekChats.push(chat);
+      } else if (chatWeek.isSame(lastWeek)) {
+        lastWeekChats.push(chat);
+      } else {
+        otherChats.push(chat);
+      }
+    }
+    const newGroupedChats: {
+      title: string;
+      chats: Chats;
+    }[] = [];
+    if (todayChats.length) {
+      newGroupedChats.push({
+        title: "Today",
+        chats: todayChats,
+      });
+    }
+    if (yesterdayChats.length) {
+      newGroupedChats.push({
+        title: "Yesterday",
+        chats: yesterdayChats,
+      });
+    }
+    if (thisWeekChats.length) {
+      newGroupedChats.push({
+        title: "This Week",
+        chats: thisWeekChats,
+      });
+    }
+    if (lastWeekChats.length) {
+      newGroupedChats.push({
+        title: "Last Week",
+        chats: lastWeekChats,
+      });
+    }
+    if (otherChats.length) {
+      newGroupedChats.push({
+        title: "Older Chats",
+        chats: otherChats,
+      });
+    }
+    setGroupedChats(newGroupedChats);
+  }, [chats]);
+
   return (
     <Flex
       className="Home-Chats"
@@ -423,98 +504,117 @@ function Chats(props: {
       my="2"
     >
       {/* List of chats */}
-      {chats?.map((chat) => {
+      {groupedChats.map((group) => {
         return (
-          <Card
-            key={chat._id}
-            className="Home-Chats-card noselect"
-            variant={activeChatId === chat._id ? "surface" : "ghost"}
-            title={chat.summary}
-            onClick={() => {
-              onSelect(chat);
-            }}
-          >
-            <Flex gap="2" align="center">
-              {/* Chat summary */}
-              <Text
-                className="Home-Chats-card-summary"
-                as="div"
-                size="2"
-                weight={activeChatId === chat._id ? "bold" : undefined}
-              >
-                {chat.summary}
-              </Text>
-
-              {/* Delete chat dialog */}
-              <AlertDialog.Root>
-                <AlertDialog.Trigger
-                  onClick={(e) => {
-                    // Prevent triggering Card onClick event
-                    e.stopPropagation();
+          <Fragment key={group.title}>
+            <Text className="Home-Chats-group-title" size="2">
+              {group.title}
+            </Text>
+            {group.chats.map((chat) => {
+              return (
+                <Card
+                  key={chat._id}
+                  className="Home-Chats-card noselect"
+                  variant={activeChatId === chat._id ? "surface" : "ghost"}
+                  title={chat.summary}
+                  onClick={() => {
+                    onSelect(chat);
                   }}
                 >
-                  <IconButton
-                    variant="soft"
-                    color="red"
-                    size="1"
-                    style={{
-                      visibility:
-                        activeChatId !== chat._id ? "hidden" : undefined,
-                    }}
-                  >
-                    <TrashIcon />
-                  </IconButton>
-                </AlertDialog.Trigger>
+                  <Flex gap="2" align="center">
+                    {/* Chat summary */}
+                    <Text
+                      className="Home-Chats-card-summary"
+                      as="div"
+                      size="2"
+                      weight={activeChatId === chat._id ? "bold" : undefined}
+                    >
+                      {chat.summary}
+                    </Text>
 
-                {/* Dialog content */}
-                <AlertDialog.Content
-                  style={{ maxWidth: 450 }}
-                  onClick={(e) => {
-                    // Prevent triggering Card onClick event
-                    e.stopPropagation();
-                  }}
-                >
-                  <AlertDialog.Title>Delete Chat</AlertDialog.Title>
-                  <AlertDialog.Description size="2">
-                    <Em>{chat.summary}</Em>
-                    <br />
-                    <br />
-                    Are you sure you want to delete the chat above?
-                  </AlertDialog.Description>
-                  <Flex gap="3" mt="4" justify="end">
-                    {/* Cancel deletion */}
-                    <AlertDialog.Cancel>
-                      <Button variant="soft" color="gray">
-                        Cancel
-                      </Button>
-                    </AlertDialog.Cancel>
-
-                    {/* Delete button */}
-                    <AlertDialog.Action>
-                      <Button
-                        variant="solid"
-                        color="red"
-                        onClick={() => {
-                          onDelete(chat);
+                    {/* Delete chat dialog */}
+                    <AlertDialog.Root>
+                      <AlertDialog.Trigger
+                        onClick={(e) => {
+                          // Prevent triggering Card onClick event
+                          e.stopPropagation();
                         }}
                       >
-                        Delete
-                      </Button>
-                    </AlertDialog.Action>
+                        <IconButton
+                          variant="soft"
+                          color="red"
+                          size="1"
+                          style={{
+                            visibility:
+                              activeChatId !== chat._id ? "hidden" : undefined,
+                          }}
+                        >
+                          <TrashIcon />
+                        </IconButton>
+                      </AlertDialog.Trigger>
+
+                      {/* Dialog content */}
+                      <AlertDialog.Content
+                        style={{ maxWidth: 450 }}
+                        onClick={(e) => {
+                          // Prevent triggering Card onClick event
+                          e.stopPropagation();
+                        }}
+                      >
+                        <AlertDialog.Title>Delete Chat</AlertDialog.Title>
+                        <AlertDialog.Description size="2">
+                          <Em>{chat.summary}</Em>
+                          <br />
+                          <br />
+                          Are you sure you want to delete the chat above?
+                        </AlertDialog.Description>
+                        <Flex gap="3" mt="4" justify="end">
+                          {/* Cancel deletion */}
+                          <AlertDialog.Cancel>
+                            <Button variant="soft" color="gray">
+                              Cancel
+                            </Button>
+                          </AlertDialog.Cancel>
+
+                          {/* Delete button */}
+                          <AlertDialog.Action>
+                            <Button
+                              variant="solid"
+                              color="red"
+                              onClick={() => {
+                                onDelete(chat);
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </AlertDialog.Action>
+                        </Flex>
+                      </AlertDialog.Content>
+                    </AlertDialog.Root>
                   </Flex>
-                </AlertDialog.Content>
-              </AlertDialog.Root>
-            </Flex>
-          </Card>
+                </Card>
+              );
+            })}
+          </Fragment>
         );
       })}
 
       {/* Show skeleton while chats are loading */}
       {!chats && (
         <SkeletonTheme
-          baseColor={grayDark.gray3}
-          highlightColor={grayDark.gray2}
+          baseColor={grayDark.gray2}
+          highlightColor={grayDark.gray3}
         >
+          {/* Group title */}
+          <Skeleton
+            width="60px"
+            height="20px"
+            borderRadius="8px"
+            duration={0.75}
+            style={{ margin: "8px 0" }}
+          />
+
+          {/* Chats */}
           {Array.from(new Array(5)).map((_, index) => (
             <Skeleton
               key={index}
@@ -522,7 +622,7 @@ function Chats(props: {
               height="36px"
               borderRadius="8px"
               duration={0.75}
-              style={{ margin: "8px 0" }}
+              style={{ margin: "4px 0" }}
             />
           ))}
         </SkeletonTheme>
@@ -580,11 +680,11 @@ function ChatWindow(props: {
                 if (message.role !== "assistant" && message.role !== "user") {
                   return null;
                 }
-                const assistantName = message.result?.model?.startsWith(
-                  "gpt-3.5"
-                )
-                  ? "ChatGPT 3.5"
-                  : "";
+                const assistantName =
+                  !message.result?.model ||
+                  message.result?.model?.startsWith("gpt-3.5")
+                    ? "ChatGPT 3.5"
+                    : "";
                 const now = moment();
                 const date = moment(message.createdAt);
                 const dateStr =
