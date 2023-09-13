@@ -580,6 +580,11 @@ function ChatWindow(props: {
                 if (message.role !== "assistant" && message.role !== "user") {
                   return null;
                 }
+                const assistantName = message.result?.model?.startsWith(
+                  "gpt-3.5"
+                )
+                  ? "ChatGPT 3.5"
+                  : "";
                 const now = moment();
                 const date = moment(message.createdAt);
                 const dateStr =
@@ -616,7 +621,7 @@ function ChatWindow(props: {
                       {/* Assistant name */}
                       {message.role === "assistant" && (
                         <Text size="1" weight="bold" color="teal">
-                          ChatGPT 3.5
+                          {assistantName}
                         </Text>
                       )}
 
