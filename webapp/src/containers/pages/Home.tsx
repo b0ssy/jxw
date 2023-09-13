@@ -41,7 +41,9 @@ import { useSelector, useDispatch } from "../../redux/store";
 import { ROUTES } from "../../routes";
 import "./Home.css";
 
-export type Chat = V1ChatsGet200ResponseData["data"][0];
+// Convenient types
+export type Chats = V1ChatsGet200ResponseData["data"];
+export type Chat = Chats[0];
 export type Message = Omit<
   V1ChatsIdMessagesGet200ResponseData["data"][0],
   "chatId" | "userId"
@@ -59,12 +61,11 @@ export default function Home() {
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
   const [message, setMessage] = useState("");
   const [activeChat, setActiveChat] = useState<ActiveChat | null>(null);
-  const [chats, setChats] = useState<V1ChatsGet200ResponseData["data"] | null>(
-    null
-  );
+  const [chats, setChats] = useState<Chats | null>(null);
 
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
   const messageInputRef = useRef<HTMLInputElement | null>(null);
+  const chatsCache = useRef<{ [k: string]: ActiveChat }>({});
 
   // Get all chats at start
   useEffect(() => {
@@ -165,11 +166,19 @@ export default function Home() {
       }
 
       // Get chat messages
-      // Use cache if available
-      const messagesRes = await backend
-        .createChatApi()
-        .v1ChatsIdMessagesGet({ id: chatId });
-      const messages = messagesRes.data.data.data;
+      // Use cache if chat is cached before and not updated yet
+      let messages: Message[] = [];
+      if (
+        chat._id in chatsCache.current &&
+        chat.updatedAt === chatsCache.current[chat._id].updatedAt
+      ) {
+        messages = chatsCache.current[chat._id].messages;
+      } else {
+        const messagesRes = await backend
+          .createChatApi()
+          .v1ChatsIdMessagesGet({ id: chatId });
+        messages = messagesRes.data.data.data;
+      }
 
       // Ignore if chat is no longer active
       if (!chatStillActive) {
@@ -177,7 +186,11 @@ export default function Home() {
       }
 
       // Set active chat
-      setActiveChat({ ...chat, messages });
+      const newActiveChat = { ...chat, messages };
+      setActiveChat(newActiveChat);
+
+      // Update cache
+      chatsCache.current[chat._id] = newActiveChat;
 
       // Connect to websocket now
       client.connect();
@@ -394,7 +407,7 @@ export default function Home() {
 
 // Show list of chats on the left panel
 function Chats(props: {
-  chats: V1ChatsGet200ResponseData["data"] | null;
+  chats: Chats | null;
   activeChatId?: string;
   onSelect: (chat: Chat) => void;
   onDelete: (chat: Chat) => void;
@@ -532,7 +545,7 @@ function ChatWindow(props: {
   chatWindowRef: React.MutableRefObject<HTMLDivElement | null>;
   messageInputRef: React.MutableRefObject<HTMLInputElement | null>;
   message: string;
-  chats: V1ChatsGet200ResponseData["data"] | null;
+  chats: Chats | null;
   activeChatId?: string;
   activeChat: ActiveChat | null;
   onMessageChange: (message: string) => void;
