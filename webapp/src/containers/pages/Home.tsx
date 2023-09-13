@@ -615,7 +615,7 @@ function Chats(props: {
           />
 
           {/* Chats */}
-          {Array.from(new Array(5)).map((_, index) => (
+          {Array.from(new Array(15)).map((_, index) => (
             <Skeleton
               key={index}
               width="100%"
